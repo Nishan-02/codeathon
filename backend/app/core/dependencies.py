@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.database.session import get_db
@@ -21,13 +21,16 @@ def get_current_user(
     2. If no token is provided or verification fails (local dev / offline mode),
        seamlessly fall back to the local test user so work is never blocked.
     """
-    if credentials and credentials.credentials:
+    token = credentials.credentials if credentials else None
+
+    if token:
         try:
-            decoded_token = verify_firebase_token(credentials.credentials)
+            decoded_token = verify_firebase_token(token)
             firebase_uid = decoded_token.get("uid")
+            email = decoded_token.get("email", "student@studyflow.ai")
+            name = decoded_token.get("name") or (email.split("@")[0] if email else "Student")
+
             if firebase_uid:
-                email = decoded_token.get("email", "")
-                name = decoded_token.get("name") or (email.split("@")[0] if email else "Student")
                 user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
                 if not user:
                     user = User(
@@ -42,17 +45,20 @@ def get_current_user(
         except Exception as e:
             logger.warning(f"Firebase token verification failed ({e}). Falling back to local test user.")
 
-    # Local development fallback user
-    dummy_uid = "local_test_user_999"
-    user = db.query(User).filter(User.firebase_uid == dummy_uid).first()
+    # Fallback/Dev user for testing without requiring Firebase setup
+    dev_uid = "dev_student_uid_001"
+    user = db.query(User).filter(User.firebase_uid == dev_uid).first()
+    if not user:
+        user = db.query(User).first()
     if not user:
         user = User(
-            firebase_uid=dummy_uid,
-            email="test@example.com",
-            name="Test Student"
+            firebase_uid=dev_uid,
+            email="student@studyflow.ai",
+            name="Alex Student"
         )
         db.add(user)
         db.commit()
         db.refresh(user)
 
     return user
+

@@ -459,7 +459,7 @@ export async function apiFetch<T>(
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 400); // 400ms quick check for live backend
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s realistic network timeout
 
     const response = await fetch(url, {
       ...options,
@@ -477,7 +477,7 @@ export async function apiFetch<T>(
     }
 
     return (await response.json()) as Promise<T>;
-  } catch {
+  } catch (err) {
     // Network error / backend offline — seamlessly return from mock DB!
     return handleMockFallback<T>(endpoint, options);
   }
