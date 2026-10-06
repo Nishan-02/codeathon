@@ -1,8 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  Animated,
+  StatusBar,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { OverviewCard } from '../../components/dashboard/OverviewCard';
-import { ScheduleItem } from '../../components/planner/ScheduleItem';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../../hooks/useAuth';
 import { ProgressService } from '../../services/progress';
 import { ExamService } from '../../services/exams';
 import { AssignmentService } from '../../services/assignments';
@@ -11,14 +20,51 @@ import { OverallProgress } from '../../types/progress';
 import { Exam } from '../../types/exam';
 import { Assignment } from '../../types/assignment';
 import { StudySchedule } from '../../types/planner';
+import { Colors, Spacing, Radius, FontSize } from '../../constants/theme';
 
+// ── Tiny helpers ──────────────────────────────────────────────────────────────
+function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
+  const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
+  return (
+    <View style={barStyles.track}>
+      <View style={[barStyles.fill, { width: `${pct}%` as any, backgroundColor: color }]} />
+    </View>
+  );
+}
+const barStyles = StyleSheet.create({
+  track: { height: 6, backgroundColor: '#1E293B', borderRadius: 99, overflow: 'hidden', flex: 1 },
+  fill: { height: '100%', borderRadius: 99 },
+});
+
+function Badge({ label, color, bg }: { label: string; color: string; bg: string }) {
+  return (
+    <View style={{ backgroundColor: bg, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 3 }}>
+      <Text style={{ color, fontSize: 11, fontWeight: '700' }}>{label}</Text>
+    </View>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 export default function DashboardScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [progress, setProgress] = useState<OverallProgress | null>(null);
   const [upcomingExams, setUpcomingExams] = useState<Exam[]>([]);
   const [upcomingAssignments, setUpcomingAssignments] = useState<Assignment[]>([]);
   const [todayTasks, setTodayTasks] = useState<StudySchedule[]>([]);
+
+  // Nova Nudge cycling
+  const nudges = [
+    '"Your recall is highest right now — let\'s conquer it."',
+    '"Consistency beats cramming — keep the streak alive."',
+    '"One focused hour beats three distracted ones."',
+  ];
+  const [nudgeIdx, setNudgeIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setNudgeIdx((i) => (i + 1) % nudges.length), 5000);
+    return () => clearInterval(t);
+  }, []);
 
   const loadData = async () => {
     try {
@@ -29,11 +75,9 @@ export default function DashboardScreen() {
         AssignmentService.getAll().catch(() => []),
         PlannerService.getSchedule().catch(() => []),
       ]);
-
       if (progData) setProgress(progData);
       setUpcomingExams(examsData);
       setUpcomingAssignments(assignmentsData.filter((a) => !a.completed));
-      
       const todayStr = new Date().toISOString().split('T')[0];
       setTodayTasks(plannerData.filter((s) => s.scheduled_date === todayStr));
     } finally {
@@ -41,123 +85,363 @@ export default function DashboardScreen() {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
+
+  const firstName = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'Student';
+  const completedToday = todayTasks.filter((t) => t.completed).length;
+  const totalToday = todayTasks.length;
+  const mlReadiness = Math.round(progress?.overall_percentage || 0);
+  const dsaCoverage = Math.round((progress?.completed_topics || 0) / Math.max(progress?.total_topics || 1, 1) * 100);
+
+  // Next exam info
+  const nextExam = upcomingExams.sort(
+    (a, b) => new Date(a.exam_date).getTime() - new Date(b.exam_date).getTime()
+  )[0];
+  const daysLeft = nextExam
+    ? Math.ceil((new Date(nextExam.exam_date).getTime() - Date.now()) / 86400000)
+    : null;
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadData} tintColor="#6366F1" />}
-    >
-      <Text style={styles.headerTitle}>Dashboard Overview</Text>
+    <SafeAreaView style={s.safeArea} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.bg} />
+      <ScrollView
+        style={s.scroll}
+        contentContainerStyle={s.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={loadData} tintColor={Colors.teal} />
+        }
+      >
+        {/* ── HEADER ── */}
+        <View style={s.header}>
+          <View>
+            <Text style={s.headerName}>{firstName}</Text>
+            <Text style={s.headerSub}>{totalToday} sessions today</Text>
+          </View>
+          <View style={s.headerRight}>
+            <TouchableOpacity style={s.novaChip} onPress={() => router.push('/(tabs)/profile')}>
+              <Text style={s.novaEmoji}>🦊</Text>
+              <Text style={s.novaChipText}>Nova</Text>
+              <View style={s.novaOnline} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/profile')} style={s.avatarCircle}>
+              <Text style={s.avatarInitial}>{firstName.charAt(0).toUpperCase()}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-      <View style={styles.grid}>
-        <OverviewCard
-          title="Overall Progress"
-          value={`${Math.round(progress?.overall_percentage || 0)}%`}
-          subtitle={`${progress?.completed_topics || 0}/${progress?.total_topics || 0} topics`}
-          iconColor="#6366F1"
-        />
-        <OverviewCard
-          title="Upcoming Exams"
-          value={upcomingExams.length}
-          subtitle="Next 30 days"
-          iconColor="#EF4444"
-        />
-      </View>
-
-      <View style={styles.grid}>
-        <OverviewCard
-          title="Pending Assignments"
-          value={upcomingAssignments.length}
-          subtitle="Assignments due"
-          iconColor="#F59E0B"
-        />
-        <OverviewCard
-          title="Today's Tasks"
-          value={todayTasks.length}
-          subtitle="Study sessions today"
-          iconColor="#10B981"
-        />
-      </View>
-
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Today's Study Schedule ⏰</Text>
-      </View>
-      {todayTasks.length === 0 ? (
-        <Text style={styles.emptyText}>No tasks scheduled for today.</Text>
-      ) : (
-        todayTasks.map((task) => <ScheduleItem key={`today-${task.id}`} item={task} />)
-      )}
-
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Quick Navigation</Text>
-      </View>
-      <View style={styles.quickActions}>
-        <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: '#374151' }]}
-          onPress={() => router.push('/exams')}
-        >
-          <Text style={styles.actionBtnText}>📝 Manage Exams</Text>
+        {/* ── NOVA NUDGE ── */}
+        <TouchableOpacity style={s.nudgeCard} activeOpacity={0.85}>
+          <View style={s.nudgeLeft}>
+            <Text style={s.nudgeEmoji}>✨</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={s.nudgeTitleRow}>
+              <Text style={s.nudgeTitle}>Nova Nudge</Text>
+              <Badge label="Active" color={Colors.teal} bg="#002E27" />
+            </View>
+            <Text style={s.nudgeText} numberOfLines={2}>
+              {nudges[nudgeIdx]}
+            </Text>
+          </View>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: '#374151' }]}
-          onPress={() => router.push('/assignments')}
-        >
-          <Text style={styles.actionBtnText}>⏳ Manage Assignments</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+
+        {/* ── ML READINESS + PEAK WINDOW ── */}
+        <View style={s.twoCol}>
+          {/* ML Readiness */}
+          <View style={[s.statCard, { flex: 1, marginRight: 8 }]}>
+            <View style={s.statCardHeader}>
+              <Text style={s.statCardLabel}>ML READINESS</Text>
+              <Text style={s.statIcon}>🧠</Text>
+            </View>
+            <Text style={s.statBigNum}>{mlReadiness}%</Text>
+            <Badge label="High Retention" color={Colors.teal} bg="#00291F" />
+            <View style={{ marginTop: 10 }}>
+              <ProgressBar value={mlReadiness} max={100} color={Colors.teal} />
+            </View>
+          </View>
+
+          {/* Peak Window */}
+          <View style={[s.statCard, { flex: 1, marginLeft: 8 }]}>
+            <View style={s.statCardHeader}>
+              <Text style={s.statCardLabel}>PEAK WINDOW</Text>
+              <Text style={s.statIcon}>🕐</Text>
+            </View>
+            <Text style={s.peakTime}>2:00 – 3:30 PM</Text>
+            <View style={s.peakBadgeRow}>
+              <Badge label="Peak Recall (94%)" color={Colors.indigo} bg="#1E1B4B" />
+            </View>
+            <Text style={s.peakSub}>● Starts in 25 min</Text>
+          </View>
+        </View>
+
+        {/* ── RAG KNOWLEDGE ENGINE ── */}
+        <View style={s.ragCard}>
+          <View style={s.ragHeader}>
+            <View style={s.ragIconWrap}>
+              <Text style={s.ragIcon}>⚙️</Text>
+            </View>
+            <Text style={s.ragTitle}>RAG Knowledge Engine</Text>
+            <Badge label="5 Syllabi Sync" color={Colors.textSecondary} bg="#1E293B" />
+          </View>
+          <View style={s.ragBody}>
+            <Text style={s.ragEmoji}>⚡</Text>
+            <Text style={s.ragText}>
+              <Text style={s.ragBold}>RAG Suggests: </Text>
+              Review Graph BFS
+            </Text>
+          </View>
+          <Text style={s.ragSub}>64% Midterm prob</Text>
+        </View>
+
+        {/* ── QUICK ACTION BUTTONS ── */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.quickScroll}>
+          <TouchableOpacity style={s.qBtn} onPress={() => router.push('/(tabs)/planner')}>
+            <Text style={s.qBtnIcon}>▶</Text>
+            <Text style={s.qBtnText}>Start 25m</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[s.qBtn, s.qBtnOutline]} onPress={() => router.push('/(tabs)/planner')}>
+            <Text style={[s.qBtnText, { color: Colors.textSecondary }]}>⟳ Session</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[s.qBtn, s.qBtnOutline]} onPress={() => router.push('/assignments')}>
+            <Text style={[s.qBtnText, { color: Colors.textSecondary }]}>📄 Assignment</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[s.qBtn, s.qBtnOutline]} onPress={() => router.push('/exams')}>
+            <Text style={[s.qBtnText, { color: Colors.textSecondary }]}>📅 Exams</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* ── TODAY'S SCHEDULE ── */}
+        <View style={s.sectionRow}>
+          <Text style={s.sectionTitle}>Today's Schedule</Text>
+          <Text style={s.sectionMeta}>
+            {completedToday}h {totalToday === 0 ? '0' : '/ ' + totalToday * 1.25 + 'h'}
+          </Text>
+        </View>
+
+        {todayTasks.length === 0 ? (
+          <View style={s.emptyCard}>
+            <Text style={s.emptyEmoji}>📚</Text>
+            <Text style={s.emptyTitle}>No sessions scheduled</Text>
+            <Text style={s.emptyHint}>Go to Planner to generate today's study plan</Text>
+          </View>
+        ) : (
+          todayTasks.map((task, idx) => {
+            const isActive = !task.completed && idx === todayTasks.findIndex((t) => !t.completed);
+            const isDone = task.completed;
+            return (
+              <View key={task.id} style={[s.scheduleCard, isActive && s.scheduleCardActive, isDone && s.scheduleCardDone]}>
+                <View style={s.scheduleLeft}>
+                  {isDone ? (
+                    <View style={s.doneIcon}><Text style={{ color: Colors.teal, fontSize: 13, fontWeight: '700' }}>✓</Text></View>
+                  ) : (
+                    <View style={[s.scheduleIcon, isActive && { backgroundColor: '#0D3352' }]}>
+                      <Text style={{ fontSize: 18 }}>🗃️</Text>
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.scheduleSubject, isDone && s.strikethrough]}>{task.topic_name || 'Study Session'}</Text>
+                    <Text style={s.scheduleTime}>
+                      {task.start_time || '--'} • {task.duration_minutes || 60} min
+                    </Text>
+                  </View>
+                </View>
+                {isActive ? (
+                  <TouchableOpacity style={s.focusBtn} onPress={() => router.push('/(tabs)/planner')}>
+                    <Text style={s.focusBtnText}>▶ Focus</Text>
+                  </TouchableOpacity>
+                ) : isDone ? (
+                  <Badge label="Done" color={Colors.teal} bg="#00291F" />
+                ) : (
+                  <Badge label="Later" color={Colors.textMuted} bg="#1E293B" />
+                )}
+              </View>
+            );
+          })
+        )}
+
+        {/* ── BOTTOM STATS ROW ── */}
+        <View style={s.twoCol}>
+          {/* Exam alert */}
+          {nextExam && (
+            <View style={[s.examCard, { flex: 1, marginRight: 8 }]}>
+              <Text style={s.examAlert}>MIDTERM EXAM</Text>
+              <Text style={s.examDaysLeft}>{daysLeft}d left</Text>
+              <Text style={s.examName} numberOfLines={1}>{nextExam.subject_name || 'Exam'}</Text>
+              <Text style={s.examDate}>
+                {new Date(nextExam.exam_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {nextExam.total_modules ? ` • ${nextExam.total_modules} modules` : ''}
+              </Text>
+              <View style={{ marginTop: 8 }}>
+                <View style={[barStyles.track, { height: 4 }]}>
+                  <View style={{ height: '100%', width: '35%', backgroundColor: Colors.red, borderRadius: 99 }} />
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* DSA coverage */}
+          <View style={[s.coverCard, { flex: 1, marginLeft: nextExam ? 8 : 0 }]}>
+            <Text style={s.coverLabel}>DSA COVERAGE</Text>
+            <Text style={s.coverPct}>{dsaCoverage}%</Text>
+            <Text style={s.coverName}>Data Structures</Text>
+            <Text style={s.coverSub}>{progress?.completed_topics || 0}/{progress?.total_topics || 0} topics complete</Text>
+            <View style={{ marginTop: 8 }}>
+              <ProgressBar value={dsaCoverage} max={100} color={Colors.teal} />
+            </View>
+          </View>
+        </View>
+
+        <View style={{ height: 24 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#13131D',
+// ── Styles ────────────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: Colors.bg },
+  scroll: { flex: 1, backgroundColor: Colors.bg },
+  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 20 },
+
+  // Header
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  headerName: { color: Colors.textPrimary, fontSize: 22, fontWeight: '700' },
+  headerSub: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  novaChip: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#111827',
+    borderRadius: 99, paddingHorizontal: 10, paddingVertical: 6, gap: 4,
+    borderWidth: 1, borderColor: '#1E293B',
   },
-  headerTitle: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  novaEmoji: { fontSize: 14 },
+  novaChipText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
+  novaOnline: { width: 7, height: 7, borderRadius: 99, backgroundColor: Colors.teal },
+  avatarCircle: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.indigo,
+    justifyContent: 'center', alignItems: 'center',
   },
-  grid: {
-    flexDirection: 'row',
-    marginBottom: 4,
+  avatarInitial: { color: Colors.white, fontWeight: '700', fontSize: 16 },
+
+  // Nova nudge
+  nudgeCard: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#0F2A22',
+    borderRadius: Radius.lg, padding: 14, marginBottom: 14,
+    borderWidth: 1, borderColor: '#1B4035',
   },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 10,
+  nudgeLeft: { marginRight: 12 },
+  nudgeEmoji: { fontSize: 24 },
+  nudgeTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  nudgeTitle: { color: Colors.teal, fontWeight: '700', fontSize: 14 },
+  nudgeText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
+
+  // Two-col
+  twoCol: { flexDirection: 'row', marginBottom: 14 },
+
+  // Stat card
+  statCard: {
+    backgroundColor: Colors.bgCard, borderRadius: Radius.lg, padding: 14,
+    borderWidth: 1, borderColor: Colors.border,
   },
-  sectionTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+  statCardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  statCardLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+  statIcon: { fontSize: 16 },
+  statBigNum: { color: Colors.textPrimary, fontSize: 32, fontWeight: '800', marginBottom: 6 },
+
+  // Peak
+  peakTime: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', marginBottom: 6 },
+  peakBadgeRow: { marginBottom: 6 },
+  peakSub: { color: Colors.textMuted, fontSize: 12, marginTop: 6 },
+
+  // RAG card
+  ragCard: {
+    backgroundColor: Colors.bgCard, borderRadius: Radius.lg, padding: 14, marginBottom: 14,
+    borderWidth: 1, borderColor: Colors.border,
   },
-  emptyText: {
-    color: '#6B7280',
-    fontStyle: 'italic',
-    marginBottom: 10,
+  ragHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  ragIconWrap: {
+    width: 32, height: 32, borderRadius: 8, backgroundColor: '#1E293B',
+    justifyContent: 'center', alignItems: 'center',
   },
-  quickActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 30,
+  ragIcon: { fontSize: 16 },
+  ragTitle: { flex: 1, color: Colors.textPrimary, fontWeight: '700', fontSize: 14 },
+  ragBody: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  ragEmoji: { fontSize: 16 },
+  ragText: { color: Colors.textSecondary, fontSize: 14 },
+  ragBold: { color: Colors.textPrimary, fontWeight: '700' },
+  ragSub: { color: Colors.amber, fontWeight: '700', fontSize: 13, marginTop: 4 },
+
+  // Quick scroll
+  quickScroll: { marginBottom: 18 },
+  qBtn: {
+    backgroundColor: Colors.teal, borderRadius: Radius.full, paddingHorizontal: 16,
+    paddingVertical: 10, marginRight: 8, flexDirection: 'row', alignItems: 'center', gap: 6,
   },
-  actionBtn: {
-    flex: 1,
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
+  qBtnOutline: { backgroundColor: '#111827', borderWidth: 1, borderColor: Colors.border },
+  qBtnIcon: { color: Colors.bg, fontSize: 13, fontWeight: '700' },
+  qBtnText: { color: Colors.bg, fontWeight: '700', fontSize: 13 },
+
+  // Section row
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  sectionTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700' },
+  sectionMeta: { color: Colors.textMuted, fontSize: 13 },
+
+  // Empty
+  emptyCard: {
+    backgroundColor: Colors.bgCard, borderRadius: Radius.lg, padding: 28,
+    alignItems: 'center', marginBottom: 14,
+    borderWidth: 1, borderColor: Colors.border,
   },
-  actionBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+  emptyEmoji: { fontSize: 32, marginBottom: 8 },
+  emptyTitle: { color: Colors.textPrimary, fontWeight: '700', fontSize: 15, marginBottom: 4 },
+  emptyHint: { color: Colors.textMuted, fontSize: 13, textAlign: 'center' },
+
+  // Schedule cards
+  scheduleCard: {
+    backgroundColor: Colors.bgCard, borderRadius: Radius.lg, padding: 14,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: 10, borderWidth: 1, borderColor: Colors.border,
   },
+  scheduleCardActive: {
+    backgroundColor: '#0A1E35', borderColor: Colors.indigo,
+  },
+  scheduleCardDone: { opacity: 0.65 },
+  scheduleLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 },
+  scheduleIcon: {
+    width: 38, height: 38, borderRadius: 10, backgroundColor: '#1E293B',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  doneIcon: {
+    width: 38, height: 38, borderRadius: 10, backgroundColor: '#002E27',
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: Colors.teal,
+  },
+  scheduleSubject: { color: Colors.textPrimary, fontWeight: '700', fontSize: 14 },
+  scheduleTime: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  strikethrough: { textDecorationLine: 'line-through', color: Colors.textMuted },
+  focusBtn: {
+    backgroundColor: Colors.indigo, borderRadius: 8,
+    paddingHorizontal: 14, paddingVertical: 8,
+  },
+  focusBtnText: { color: Colors.white, fontWeight: '700', fontSize: 13 },
+
+  // Exam card
+  examCard: {
+    backgroundColor: Colors.bgCard, borderRadius: Radius.lg, padding: 14,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  examAlert: { color: Colors.red, fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
+  examDaysLeft: { color: Colors.red, fontSize: 13, fontWeight: '700', position: 'absolute', top: 14, right: 14 },
+  examName: { color: Colors.textPrimary, fontWeight: '700', fontSize: 15, marginTop: 4 },
+  examDate: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+
+  // Coverage card
+  coverCard: {
+    backgroundColor: Colors.bgCard, borderRadius: Radius.lg, padding: 14,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  coverLabel: { color: Colors.teal, fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
+  coverPct: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginTop: 4 },
+  coverName: { color: Colors.textPrimary, fontWeight: '700', fontSize: 14, marginTop: 2 },
+  coverSub: { color: Colors.textMuted, fontSize: 11, marginTop: 2 },
 });

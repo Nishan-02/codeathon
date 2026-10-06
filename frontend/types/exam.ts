@@ -5,6 +5,9 @@ export interface Exam {
   title: string;
   exam_date: string;
   description?: string | null;
+  // Optional display-friendly fields
+  subject_name?: string | null;
+  total_modules?: number | null;
 }
 
 export interface CreateExamInput {

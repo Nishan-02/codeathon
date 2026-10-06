@@ -1,50 +1,31 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  User as FirebaseUser,
-} from 'firebase/auth';
-import { CONFIG } from '../constants/config';
+// ── Firebase Service (STUB for mock-auth mode) ────────────────────────────────
+// This file is intentionally non-functional until real Firebase credentials
+// are added to a .env file.  See .env.example for the required variables.
+//
+// When you're ready to enable real Firebase auth:
+//   1. Create a Firebase project at https://console.firebase.google.com
+//   2. Copy .env.example → .env and fill in all EXPO_PUBLIC_FIREBASE_* values
+//   3. Replace AuthContext.tsx with the firebase-backed version
+//   4. Restore getIdToken() in services/api.ts
+//
+// Nothing in the app currently imports from this file.
 
-// Initialize Firebase App
-const firebaseConfig = {
-  apiKey: CONFIG.FIREBASE.apiKey,
-  authDomain: CONFIG.FIREBASE.authDomain,
-  projectId: CONFIG.FIREBASE.projectId,
-  storageBucket: CONFIG.FIREBASE.storageBucket,
-  messagingSenderId: CONFIG.FIREBASE.messagingSenderId,
-  appId: CONFIG.FIREBASE.appId,
+export const auth = null;
+
+export const signUp = async (_email: string, _password: string) => {
+  throw new Error('Firebase not configured. Use mock auth.');
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-export const auth = getAuth(app);
-
-// Authentication helper methods
-export const signUp = async (email: string, password: string): Promise<FirebaseUser> => {
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  return userCredential.user;
+export const signIn = async (_email: string, _password: string) => {
+  throw new Error('Firebase not configured. Use mock auth.');
 };
 
-export const signIn = async (email: string, password: string): Promise<FirebaseUser> => {
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  return userCredential.user;
+export const signOut = async () => {
+  throw new Error('Firebase not configured. Use mock auth.');
 };
 
-export const signOut = async (): Promise<void> => {
-  await firebaseSignOut(auth);
-};
+export const getCurrentUser = () => null;
 
-export const getCurrentUser = (): FirebaseUser | null => {
-  return auth.currentUser;
-};
+export const getIdToken = async (): Promise<string | null> => null;
 
-export const getIdToken = async (): Promise<string | null> => {
-  const currentUser = auth.currentUser;
-  if (!currentUser) return null;
-  return await currentUser.getIdToken();
-};
-
-export { onAuthStateChanged };
+export const onAuthStateChanged = (_auth: any, _cb: any) => () => {};
