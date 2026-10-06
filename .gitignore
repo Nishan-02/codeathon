@@ -1,0 +1,36 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Node dependencies & Expo
+node_modules/
+.expo/
+dist/
+web-build/
+*.log
+
+# Python & Virtualenv
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment and Credentials
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+firebase-service-account.json
+*.pem
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
