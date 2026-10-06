@@ -252,15 +252,18 @@ export default function ProfileScreen() {
             <View style={[s.mainContainer, isDesktop && s.mainContainerDesktop]}>
             {/* ── 1. Hero Profile Card ── */}
             <View style={s.heroCard}>
-              {/* Edit Profile Button Top Right */}
-              <TouchableOpacity
-                style={s.editBtn}
-                onPress={() => setEditModalVisible(true)}
-                activeOpacity={0.8}
-              >
-                <Text style={s.editBtnIcon}>✏️</Text>
-                <Text style={s.editBtnText}>Edit Profile</Text>
-              </TouchableOpacity>
+              {/* Top Bar with Edit Profile Button */}
+              <View style={s.heroTopBar}>
+                <View style={{ flex: 1 }} />
+                <TouchableOpacity
+                  style={s.editBtn}
+                  onPress={() => setEditModalVisible(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={s.editBtnIcon}>✏️</Text>
+                  <Text style={s.editBtnText}>Edit Profile</Text>
+                </TouchableOpacity>
+              </View>
 
               {/* Avatar Circle */}
               <TouchableOpacity
@@ -297,7 +300,7 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            {/* ── 2. Stats Row (3 Colored Glow Cards) ── */}
+            {/* ── 2. Stats Row (3 Colored Glow Cards - Centered & Responsive) ── */}
             <View style={s.statsGrid}>
               {/* Sessions Card */}
               <TouchableOpacity
@@ -305,16 +308,11 @@ export default function ProfileScreen() {
                 activeOpacity={0.8}
                 onPress={() => router.push('/(tabs)')}
               >
-                <View style={s.statLeft}>
-                  <View style={[s.statIconBox, s.statIconTeal]}>
-                    <Text style={s.statEmoji}>📖</Text>
-                  </View>
-                  <View>
-                    <Text style={[s.statNumber, { color: '#00DFB2' }]}>12</Text>
-                    <Text style={s.statLabel}>Sessions</Text>
-                  </View>
+                <View style={[s.statIconBox, s.statIconTeal]}>
+                  <Text style={s.statEmoji}>📖</Text>
                 </View>
-                <Text style={s.statChevron}>›</Text>
+                <Text style={[s.statNumber, { color: '#00DFB2' }]}>12</Text>
+                <Text style={s.statLabel} numberOfLines={1}>Sessions</Text>
               </TouchableOpacity>
 
               {/* Day Streak Card */}
@@ -323,16 +321,11 @@ export default function ProfileScreen() {
                 activeOpacity={0.8}
                 onPress={() => setStreakModalVisible(true)}
               >
-                <View style={s.statLeft}>
-                  <View style={[s.statIconBox, s.statIconAmber]}>
-                    <Text style={s.statEmoji}>🔥</Text>
-                  </View>
-                  <View>
-                    <Text style={[s.statNumber, { color: '#F59E0B' }]}>5</Text>
-                    <Text style={s.statLabel}>Day Streak</Text>
-                  </View>
+                <View style={[s.statIconBox, s.statIconAmber]}>
+                  <Text style={s.statEmoji}>🔥</Text>
                 </View>
-                <Text style={s.statChevron}>›</Text>
+                <Text style={[s.statNumber, { color: '#F59E0B' }]}>5</Text>
+                <Text style={s.statLabel} numberOfLines={1}>Day Streak</Text>
               </TouchableOpacity>
 
               {/* Topics Card */}
@@ -341,16 +334,11 @@ export default function ProfileScreen() {
                 activeOpacity={0.8}
                 onPress={() => router.push('/(tabs)/subjects')}
               >
-                <View style={s.statLeft}>
-                  <View style={[s.statIconBox, s.statIconPurple]}>
-                    <Text style={s.statEmoji}>📊</Text>
-                  </View>
-                  <View>
-                    <Text style={[s.statNumber, { color: '#A855F7' }]}>28</Text>
-                    <Text style={s.statLabel}>Topics</Text>
-                  </View>
+                <View style={[s.statIconBox, s.statIconPurple]}>
+                  <Text style={s.statEmoji}>📊</Text>
                 </View>
-                <Text style={s.statChevron}>›</Text>
+                <Text style={[s.statNumber, { color: '#A855F7' }]}>28</Text>
+                <Text style={s.statLabel} numberOfLines={1}>Topics</Text>
               </TouchableOpacity>
             </View>
 
@@ -1128,47 +1116,52 @@ const s = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     borderColor: 'rgba(0, 223, 178, 0.22)',
-    paddingVertical: 28,
-    paddingHorizontal: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    position: 'relative',
-    marginBottom: 16,
+    marginBottom: 14,
     ...(Platform.OS === 'web'
       ? ({
         boxShadow: '0 10px 30px rgba(0, 0, 0, 0.45)',
+        backdropFilter: 'blur(16px)',
       } as any)
       : {}),
   },
-  editBtn: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
+  heroTopBar: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'flex-end',
+    marginBottom: 4,
+  },
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     borderWidth: 1.2,
     borderColor: '#00DFB2',
-    borderRadius: 10,
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-    backgroundColor: 'rgba(0, 223, 178, 0.05)',
+    borderRadius: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    backgroundColor: 'rgba(0, 223, 178, 0.08)',
   },
   editBtnIcon: {
-    fontSize: 13,
+    fontSize: 11,
   },
   editBtnText: {
     color: '#00DFB2',
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: '700',
   },
   avatarCircle: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     backgroundColor: '#00DFB2',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 14,
+    marginTop: 0,
+    marginBottom: 12,
     shadowColor: '#00DFB2',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
@@ -1177,25 +1170,27 @@ const s = StyleSheet.create({
   },
   avatarInitials: {
     color: '#072B28',
-    fontSize: 34,
+    fontSize: 30,
     fontWeight: '900',
   },
   heroName: {
     color: '#FFFFFF',
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     letterSpacing: -0.3,
   },
   heroEmail: {
     color: '#8E9BAE',
-    fontSize: 13.5,
-    marginTop: 4,
-    marginBottom: 16,
+    fontSize: 12.5,
+    marginTop: 2,
+    marginBottom: 14,
   },
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
   },
   activeBadge: {
     flexDirection: 'row',
@@ -1205,8 +1200,8 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 223, 178, 0.35)',
     borderRadius: 99,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   greenDot: {
     width: 6,
@@ -1216,7 +1211,7 @@ const s = StyleSheet.create({
   },
   activeBadgeText: {
     color: '#00DFB2',
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '700',
   },
   studentBadge: {
@@ -1227,34 +1222,35 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(139, 92, 246, 0.35)',
     borderRadius: 99,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   studentBadgeIcon: {
     fontSize: 12,
   },
   studentBadgeText: {
     color: '#C084FC',
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '700',
   },
 
   // ── Stats Row ─────────────────────────────────────────────────────────────
   statsGrid: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 16,
+    gap: 8,
+    marginBottom: 14,
+    width: '100%',
   },
   statCard: {
     flex: 1,
     backgroundColor: '#0B1526',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    flexDirection: 'row',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     ...(Platform.OS === 'web'
       ? ({
         transition: 'transform 0.2s, border-color 0.2s',
@@ -1271,18 +1267,14 @@ const s = StyleSheet.create({
   statCardPurple: {
     borderColor: 'rgba(168, 85, 247, 0.32)',
   },
-  statLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
   statIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
+    marginBottom: 6,
   },
   statIconTeal: {
     backgroundColor: 'rgba(0, 223, 178, 0.12)',
@@ -1297,22 +1289,23 @@ const s = StyleSheet.create({
     borderColor: 'rgba(168, 85, 247, 0.28)',
   },
   statEmoji: {
-    fontSize: 20,
+    fontSize: 14,
   },
   statNumber: {
-    fontSize: 24,
-    fontWeight: '900',
-    lineHeight: 28,
+    fontSize: 18,
+    fontWeight: '800',
+    lineHeight: 22,
+    textAlign: 'center',
   },
   statLabel: {
     color: '#8E9BAE',
-    fontSize: 12.5,
+    fontSize: 11,
     fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 2,
   },
   statChevron: {
-    color: '#64748B',
-    fontSize: 20,
-    fontWeight: '600',
+    display: 'none',
   },
 
   // ── Section Card (Account Details & Preferences) ──────────────────────────
