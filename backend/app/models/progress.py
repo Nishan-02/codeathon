@@ -1,20 +1,24 @@
-from sqlalchemy import Column, Integer, Float, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
-from datetime import datetime
-from app.database.database import Base
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from app.database.session import get_db
+from app.core.dependencies import get_current_user
+from app.models.user import User
+from app.services.progress_service import ProgressService
+
+router = APIRouter(prefix="/progress", tags=["Progress & Analytics"])
 
 
-class Progress(Base):
-    __tablename__ = "progress"
+@router.get("/dashboard")
+def get_user_progress(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return ProgressService.get_progress_dashboard(db=db, user_id=current_user.id)
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
-    completed_topics = Column(Integer, default=0)
-    total_topics = Column(Integer, default=0)
-    progress_percentage = Column(Float, default=0.0)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
-    user = relationship("User", back_populates="progress_records")
-    subject = relationship("Subject", back_populates="progress")
+@router.get("/predict")
+def predict_score(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return ProgressService.get_exam_prediction(db=db, user_id=current_user.id)
