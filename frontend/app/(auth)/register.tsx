@@ -49,12 +49,12 @@ function GlassInput({
             gi.input,
             Platform.OS === 'web'
               ? ({
-                  outline: 'none',
-                  backgroundColor: 'transparent',
-                  color: '#FFFFFF',
-                  WebkitBoxShadow: '0 0 0 1000px rgba(12, 22, 36, 0.95) inset',
-                  WebkitTextFillColor: '#FFFFFF',
-                } as any)
+                outline: 'none',
+                backgroundColor: 'transparent',
+                color: '#FFFFFF',
+                WebkitBoxShadow: '0 0 0 1000px rgba(12, 22, 36, 0.95) inset',
+                WebkitTextFillColor: '#FFFFFF',
+              } as any)
               : null,
           ]}
           placeholder={placeholder}
@@ -185,11 +185,11 @@ export default function RegisterScreen() {
                   isDesktop && s.cardDesktop,
                   Platform.OS === 'web'
                     ? ({
-                        backdropFilter: 'blur(32px) saturate(190%)',
-                        WebkitBackdropFilter: 'blur(32px) saturate(190%)',
-                        boxShadow:
-                          '0 0 50px rgba(0, 223, 178, 0.2), 0 25px 50px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.18)',
-                      } as any)
+                      backdropFilter: 'blur(32px) saturate(190%)',
+                      WebkitBackdropFilter: 'blur(32px) saturate(190%)',
+                      boxShadow:
+                        '0 0 50px rgba(0, 223, 178, 0.2), 0 25px 50px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.18)',
+                    } as any)
                     : null,
                 ]}
               >
@@ -205,13 +205,13 @@ export default function RegisterScreen() {
                 </View>
 
                 <View style={s.welcomeWrap}>
-                  <Text style={s.welcomeTitle}>Create Account ✨</Text>
+                  <Text style={s.welcomeTitle}>Create Account </Text>
                   <Text style={s.welcomeSub}>Start your AI-powered study journey today</Text>
                 </View>
 
                 <GlassInput
                   label="Full Name"
-                  placeholder="John Doe"
+                  placeholder="Enter your name"
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
@@ -219,7 +219,7 @@ export default function RegisterScreen() {
                 />
                 <GlassInput
                   label="Email Address"
-                  placeholder="student@example.com"
+                  placeholder="Enter your email"
                   keyboardType="email-address"
                   value={email}
                   onChangeText={setEmail}
