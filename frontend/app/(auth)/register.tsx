@@ -153,7 +153,7 @@ export default function RegisterScreen() {
     }
     try {
       setLoading(true);
-      await signUp(email.trim(), password);
+      await signUp(email.trim(), password, name.trim());
       router.replace('/(tabs)');
     } catch (err: any) {
       Alert.alert('Registration Failed', err.message || 'Could not create account.');
