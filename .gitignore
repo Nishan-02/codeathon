@@ -29,6 +29,11 @@ htmlcov/
 firebase-service-account.json
 *.pem
 
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
 # IDEs & Editors
 .vscode/
 .idea/
