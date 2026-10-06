@@ -99,16 +99,7 @@ const ct = StyleSheet.create({
   },
 });
 
-// Week strip days
-const DAYS_DATA = [
-  { day: 'MON', num: '06' },
-  { day: 'TUE', num: '07' },
-  { day: 'WED', num: '08' },
-  { day: 'THU', num: '09' },
-  { day: 'FRI', num: '10' },
-  { day: 'SUN', num: '12' },
-];
-
+// Week strip days & multi-day schedules
 interface TimelineItem {
   id: number;
   topic_name: string;
@@ -118,55 +109,438 @@ interface TimelineItem {
   duration_minutes: number;
   duration_label?: string;
   completed: boolean;
-  type?: 'done' | 'active' | 'later' | 'gap';
+  type?: 'done' | 'active' | 'later';
+  icon?: string;
+  timerMinutes?: number;
+  timerSeconds?: number;
   badgeColor?: string;
   badgeBg?: string;
 }
 
-const INITIAL_BLOCKS: TimelineItem[] = [
+interface DaySchedule {
+  day: string;
+  num: string;
+  dateStr: string;
+  mlBanner: {
+    title: string;
+    subPrefix: string;
+    bufferHighlight: string;
+    subSuffix: string;
+  };
+  target: {
+    completedStr: string;
+    totalStr: string;
+    pct: number;
+    remainingStr: string;
+    status: string;
+  };
+  blocks: TimelineItem[];
+  freeGapInserted?: boolean;
+}
+
+const INITIAL_DAY_SCHEDULES: DaySchedule[] = [
   {
-    id: 1,
-    topic_name: 'Data-Structures',
-    rag_tag: 'RAG: Core Midterm',
-    start_time: '10:00',
-    duration_minutes: 90,
-    duration_label: '90m',
-    completed: true,
-    badgeColor: '#93C5FD',
-    badgeBg: 'rgba(59, 130, 246, 0.2)',
+    day: 'MON',
+    num: '06',
+    dateStr: 'Monday, Oct 06',
+    mlBanner: {
+      title: 'ML ADAPTIVE ENGINE',
+      subPrefix: 'ML Adaptive Pace • ',
+      bufferHighlight: '+45m buffer',
+      subSuffix: ' inserted...',
+    },
+    target: {
+      completedStr: '1h 30m',
+      totalStr: '4h 30m',
+      pct: 33,
+      remainingStr: '3h 0m',
+      status: '⌛ In Progress',
+    },
+    blocks: [
+      {
+        id: 101,
+        topic_name: 'Data-Structures',
+        rag_tag: 'RAG: Core Midterm',
+        start_time: '10:00',
+        duration_minutes: 90,
+        duration_label: '90m',
+        completed: true,
+        type: 'done',
+        badgeColor: '#93C5FD',
+        badgeBg: 'rgba(59, 130, 246, 0.2)',
+      },
+      {
+        id: 102,
+        topic_name: 'Database Management',
+        rag_tag: 'RAG: High Weightage (18 pts)',
+        start_time: '02:00',
+        duration_minutes: 75,
+        duration_label: '1h 15m',
+        completed: false,
+        type: 'active',
+        timerMinutes: 24,
+        timerSeconds: 11,
+        badgeColor: '#A5B4FC',
+        badgeBg: 'rgba(99, 102, 241, 0.25)',
+      },
+      {
+        id: 103,
+        topic_name: 'Operating Systems',
+        rag_tag: 'RAG: Buffer +45m',
+        start_time: '05:00',
+        duration_minutes: 105,
+        duration_label: '105m',
+        completed: false,
+        type: 'later',
+        icon: '🕒',
+        badgeColor: '#93C5FD',
+        badgeBg: 'rgba(59, 130, 246, 0.2)',
+      },
+      {
+        id: 104,
+        topic_name: 'Revision & Recall',
+        rag_tag: 'Networks',
+        start_time: '08:30',
+        duration_minutes: 45,
+        duration_label: '45m',
+        completed: false,
+        type: 'later',
+        icon: '🧠',
+        badgeColor: '#C4B5FD',
+        badgeBg: 'rgba(139, 92, 246, 0.2)',
+      },
+    ],
   },
   {
-    id: 2,
-    topic_name: 'Database Management',
-    rag_tag: 'RAG: High Weightage (18 pts)',
-    start_time: '02:00',
-    duration_minutes: 75,
-    duration_label: '1h 15m',
-    completed: false,
-    badgeColor: '#A5B4FC',
-    badgeBg: 'rgba(99, 102, 241, 0.25)',
+    day: 'TUE',
+    num: '07',
+    dateStr: 'Tuesday, Oct 07',
+    mlBanner: {
+      title: 'ML ADAPTIVE ENGINE',
+      subPrefix: 'ML Adaptive Pace • ',
+      bufferHighlight: 'Spaced Repetition',
+      subSuffix: ' prioritized for DP & Architecture',
+    },
+    target: {
+      completedStr: '3h 15m',
+      totalStr: '4h 00m',
+      pct: 81,
+      remainingStr: '45m',
+      status: '🔥 On Track',
+    },
+    blocks: [
+      {
+        id: 201,
+        topic_name: 'Algorithms: Dynamic Programming',
+        rag_tag: 'RAG: LeetCode Hard Patterns',
+        start_time: '09:30',
+        duration_minutes: 90,
+        duration_label: '90m',
+        completed: true,
+        type: 'done',
+        badgeColor: '#6EE7B7',
+        badgeBg: 'rgba(16, 185, 129, 0.2)',
+      },
+      {
+        id: 202,
+        topic_name: 'Computer Architecture',
+        rag_tag: 'RAG: Cache Hierarchy & Pipeline',
+        start_time: '11:30',
+        duration_minutes: 60,
+        duration_label: '1h 00m',
+        completed: true,
+        type: 'done',
+        badgeColor: '#93C5FD',
+        badgeBg: 'rgba(59, 130, 246, 0.2)',
+      },
+      {
+        id: 203,
+        topic_name: 'Software Engineering & CI/CD',
+        rag_tag: 'RAG: Midterm Practice',
+        start_time: '02:30',
+        duration_minutes: 45,
+        duration_label: '45m',
+        completed: false,
+        type: 'active',
+        timerMinutes: 18,
+        timerSeconds: 45,
+        badgeColor: '#A5B4FC',
+        badgeBg: 'rgba(99, 102, 241, 0.25)',
+      },
+      {
+        id: 204,
+        topic_name: 'Database Query Optimization',
+        rag_tag: 'RAG: Indexing & B-Trees',
+        start_time: '05:00',
+        duration_minutes: 45,
+        duration_label: '45m',
+        completed: false,
+        type: 'later',
+        icon: '📊',
+        badgeColor: '#C4B5FD',
+        badgeBg: 'rgba(139, 92, 246, 0.2)',
+      },
+    ],
   },
   {
-    id: 3,
-    topic_name: 'Operating Systems',
-    rag_tag: 'RAG: Buffer +45m',
-    start_time: '05:00',
-    duration_minutes: 105,
-    duration_label: '105m',
-    completed: false,
-    badgeColor: '#93C5FD',
-    badgeBg: 'rgba(59, 130, 246, 0.2)',
+    day: 'WED',
+    num: '08',
+    dateStr: 'Wednesday, Oct 08',
+    mlBanner: {
+      title: 'ML ADAPTIVE ENGINE',
+      subPrefix: 'ML Adaptive Pace • ',
+      bufferHighlight: 'High focus session',
+      subSuffix: ' on Deep Learning & Neural Nets',
+    },
+    target: {
+      completedStr: '0h 00m',
+      totalStr: '3h 30m',
+      pct: 0,
+      remainingStr: '3h 30m',
+      status: '📅 Scheduled',
+    },
+    blocks: [
+      {
+        id: 301,
+        topic_name: 'Artificial Intelligence & Neural Nets',
+        rag_tag: 'RAG: Backprop & Loss Functions',
+        start_time: '10:00',
+        duration_minutes: 75,
+        duration_label: '1h 15m',
+        completed: false,
+        type: 'active',
+        timerMinutes: 75,
+        timerSeconds: 0,
+        badgeColor: '#F472B6',
+        badgeBg: 'rgba(244, 114, 182, 0.2)',
+      },
+      {
+        id: 302,
+        topic_name: 'Calculus & Matrix Algebra',
+        rag_tag: 'RAG: Eigenvalues & Vectors',
+        start_time: '01:30',
+        duration_minutes: 60,
+        duration_label: '1h 00m',
+        completed: false,
+        type: 'later',
+        icon: '📐',
+        badgeColor: '#93C5FD',
+        badgeBg: 'rgba(59, 130, 246, 0.2)',
+      },
+      {
+        id: 303,
+        topic_name: 'OS Memory Management',
+        rag_tag: 'RAG: Virtual Memory & Paging',
+        start_time: '04:00',
+        duration_minutes: 45,
+        duration_label: '45m',
+        completed: false,
+        type: 'later',
+        icon: '💻',
+        badgeColor: '#A5B4FC',
+        badgeBg: 'rgba(99, 102, 241, 0.25)',
+      },
+      {
+        id: 304,
+        topic_name: 'Evening Flashcard Drill',
+        rag_tag: 'RAG: Spaced Recall',
+        start_time: '08:00',
+        duration_minutes: 30,
+        duration_label: '30m',
+        completed: false,
+        type: 'later',
+        icon: '🧠',
+        badgeColor: '#C4B5FD',
+        badgeBg: 'rgba(139, 92, 246, 0.2)',
+      },
+    ],
   },
   {
-    id: 4,
-    topic_name: 'Revision & Recall',
-    rag_tag: 'Networks',
-    start_time: '08:30',
-    duration_minutes: 45,
-    duration_label: '45m',
-    completed: false,
-    badgeColor: '#C4B5FD',
-    badgeBg: 'rgba(139, 92, 246, 0.2)',
+    day: 'THU',
+    num: '09',
+    dateStr: 'Thursday, Oct 09',
+    mlBanner: {
+      title: 'ML ADAPTIVE ENGINE',
+      subPrefix: 'ML Adaptive Pace • ',
+      bufferHighlight: 'Deep Work Sprint',
+      subSuffix: ' (Heavy Midterm Coverage)',
+    },
+    target: {
+      completedStr: '2h 00m',
+      totalStr: '5h 00m',
+      pct: 40,
+      remainingStr: '3h 0m',
+      status: '⌛ In Progress',
+    },
+    blocks: [
+      {
+        id: 401,
+        topic_name: 'Computer Networks: TCP/IP',
+        rag_tag: 'RAG: Protocol Stack & Handshakes',
+        start_time: '09:00',
+        duration_minutes: 60,
+        duration_label: '1h 00m',
+        completed: true,
+        type: 'done',
+        badgeColor: '#6EE7B7',
+        badgeBg: 'rgba(16, 185, 129, 0.2)',
+      },
+      {
+        id: 402,
+        topic_name: 'Cybersecurity Fundamentals',
+        rag_tag: 'RAG: Cryptography & RSA Keys',
+        start_time: '10:30',
+        duration_minutes: 60,
+        duration_label: '1h 00m',
+        completed: true,
+        type: 'done',
+        badgeColor: '#93C5FD',
+        badgeBg: 'rgba(59, 130, 246, 0.2)',
+      },
+      {
+        id: 403,
+        topic_name: 'Graph Algorithms: Dijkstra & A*',
+        rag_tag: 'RAG: Priority Queue & Heuristics',
+        start_time: '02:00',
+        duration_minutes: 90,
+        duration_label: '1h 30m',
+        completed: false,
+        type: 'active',
+        timerMinutes: 31,
+        timerSeconds: 20,
+        badgeColor: '#A5B4FC',
+        badgeBg: 'rgba(99, 102, 241, 0.25)',
+      },
+      {
+        id: 404,
+        topic_name: 'System Design: Load Balancers',
+        rag_tag: 'RAG: High Availability & Caching',
+        start_time: '06:00',
+        duration_minutes: 90,
+        duration_label: '1h 30m',
+        completed: false,
+        type: 'later',
+        icon: '⚙️',
+        badgeColor: '#C4B5FD',
+        badgeBg: 'rgba(139, 92, 246, 0.2)',
+      },
+    ],
+  },
+  {
+    day: 'FRI',
+    num: '10',
+    dateStr: 'Friday, Oct 10',
+    mlBanner: {
+      title: 'ML ADAPTIVE ENGINE',
+      subPrefix: 'ML Adaptive Pace • ',
+      bufferHighlight: '96% retention',
+      subSuffix: ' cleared across all targets! 🌟',
+    },
+    target: {
+      completedStr: '4h 00m',
+      totalStr: '4h 00m',
+      pct: 100,
+      remainingStr: '0m',
+      status: '🎉 Completed',
+    },
+    blocks: [
+      {
+        id: 501,
+        topic_name: 'Full Mock Exam: DSA & OS',
+        rag_tag: 'RAG: Comprehensive Assessment',
+        start_time: '09:00',
+        duration_minutes: 120,
+        duration_label: '2h 00m',
+        completed: true,
+        type: 'done',
+        badgeColor: '#6EE7B7',
+        badgeBg: 'rgba(16, 185, 129, 0.2)',
+      },
+      {
+        id: 502,
+        topic_name: 'Mock Exam Mistake Analysis',
+        rag_tag: 'RAG: Weak Area Remediation',
+        start_time: '01:00',
+        duration_minutes: 60,
+        duration_label: '1h 00m',
+        completed: true,
+        type: 'done',
+        badgeColor: '#6EE7B7',
+        badgeBg: 'rgba(16, 185, 129, 0.2)',
+      },
+      {
+        id: 503,
+        topic_name: 'Web Dev: REST API Security',
+        rag_tag: 'RAG: JWT Auth & RBAC',
+        start_time: '03:30',
+        duration_minutes: 60,
+        duration_label: '1h 00m',
+        completed: true,
+        type: 'done',
+        badgeColor: '#6EE7B7',
+        badgeBg: 'rgba(16, 185, 129, 0.2)',
+      },
+    ],
+  },
+  {
+    day: 'SUN',
+    num: '12',
+    dateStr: 'Sunday, Oct 12',
+    mlBanner: {
+      title: 'ML ADAPTIVE ENGINE',
+      subPrefix: 'ML Adaptive Pace • ',
+      bufferHighlight: 'Weekly Synthesis',
+      subSuffix: ', Formula Sheet & Roadmap',
+    },
+    target: {
+      completedStr: '0h 00m',
+      totalStr: '3h 00m',
+      pct: 0,
+      remainingStr: '3h 0m',
+      status: '⚡ Upcoming Sprint',
+    },
+    blocks: [
+      {
+        id: 601,
+        topic_name: 'Weekly High-Yield Formula Sheet',
+        rag_tag: 'RAG: Cheat-Sheet Master',
+        start_time: '10:30',
+        duration_minutes: 60,
+        duration_label: '1h 00m',
+        completed: false,
+        type: 'active',
+        timerMinutes: 60,
+        timerSeconds: 0,
+        badgeColor: '#A5B4FC',
+        badgeBg: 'rgba(99, 102, 241, 0.25)',
+      },
+      {
+        id: 602,
+        topic_name: 'Distributed Systems Basics',
+        rag_tag: 'RAG: CAP Theorem & Consensus',
+        start_time: '02:00',
+        duration_minutes: 75,
+        duration_label: '1h 15m',
+        completed: false,
+        type: 'later',
+        icon: '🌐',
+        badgeColor: '#93C5FD',
+        badgeBg: 'rgba(59, 130, 246, 0.2)',
+      },
+      {
+        id: 603,
+        topic_name: 'Weekly Retrospective & Next Week Plan',
+        rag_tag: 'RAG: ML Auto-Scheduler',
+        start_time: '05:00',
+        duration_minutes: 45,
+        duration_label: '45m',
+        completed: false,
+        type: 'later',
+        icon: '📋',
+        badgeColor: '#C4B5FD',
+        badgeBg: 'rgba(139, 92, 246, 0.2)',
+      },
+    ],
   },
 ];
 
@@ -178,10 +552,9 @@ export default function PlannerScreen() {
 
   const isDesktop = width >= 860;
 
-  // Local interactive blocks state
-  const [blocks, setBlocks] = useState<TimelineItem[]>(INITIAL_BLOCKS);
+  // Multi-day schedules state
+  const [daySchedules, setDaySchedules] = useState<DaySchedule[]>(INITIAL_DAY_SCHEDULES);
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
-  const [freeGapInserted, setFreeGapInserted] = useState(false);
 
   // Modal State for Adding Block
   const [modalVisible, setModalVisible] = useState(false);
@@ -193,16 +566,46 @@ export default function PlannerScreen() {
   const firstName =
     user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'Harsha';
 
-  // Toggle block completion
+  const currentDayData = daySchedules[selectedDayIdx] || daySchedules[0];
+
+  // Toggle block completion and recalculate daily target
   const handleToggleBlock = (id: number) => {
-    setBlocks((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, completed: !b.completed } : b))
-    );
+    setDaySchedules((prev) => {
+      const next = prev.map((d, dIdx) => {
+        if (dIdx !== selectedDayIdx) return d;
+        const updatedBlocks = d.blocks.map((b) =>
+          b.id === id ? { ...b, completed: !b.completed } : b
+        );
+        const totalMinutes = updatedBlocks.reduce((acc, b) => acc + (b.duration_minutes || 60), 0);
+        const completedMinutes = updatedBlocks
+          .filter((b) => b.completed)
+          .reduce((acc, b) => acc + (b.duration_minutes || 60), 0);
+        const newPct = totalMinutes > 0 ? Math.round((completedMinutes / totalMinutes) * 100) : 0;
+        const compHours = Math.floor(completedMinutes / 60);
+        const compMins = completedMinutes % 60;
+        const remMinutes = Math.max(totalMinutes - completedMinutes, 0);
+        const remHours = Math.floor(remMinutes / 60);
+        const remMins = remMinutes % 60;
+
+        return {
+          ...d,
+          blocks: updatedBlocks,
+          target: {
+            ...d.target,
+            completedStr: `${compHours}h ${compMins > 0 ? `${compMins}m` : '00m'}`,
+            pct: newPct,
+            remainingStr: `${remHours}h ${remMins > 0 ? `${remMins}m` : '0m'}`,
+            status: newPct === 100 ? '🎉 Completed' : newPct > 50 ? '🔥 On Track' : '⌛ In Progress',
+          },
+        };
+      });
+      return next;
+    });
   };
 
-  // Insert Free Gap into schedule
+  // Insert Free Gap into current day schedule
   const handleInsertFreeGap = () => {
-    if (freeGapInserted) return;
+    if (currentDayData.freeGapInserted) return;
     const newGapBlock: TimelineItem = {
       id: Date.now(),
       topic_name: 'Quick Quiz Review',
@@ -211,19 +614,28 @@ export default function PlannerScreen() {
       duration_minutes: 30,
       duration_label: '30m',
       completed: false,
+      type: 'later',
+      icon: '⚡',
       badgeColor: '#6EE7B7',
       badgeBg: 'rgba(16, 185, 129, 0.2)',
     };
-    setBlocks((prev) => {
-      const copy = [...prev];
-      copy.splice(2, 0, newGapBlock);
-      return copy;
+
+    setDaySchedules((prev) => {
+      const next = prev.map((d, dIdx) => {
+        if (dIdx !== selectedDayIdx) return d;
+        return {
+          ...d,
+          blocks: [...d.blocks, newGapBlock],
+          freeGapInserted: true,
+        };
+      });
+      return next;
     });
-    setFreeGapInserted(true);
-    Alert.alert('Success', 'Free gap quiz review added to your schedule!');
+
+    Alert.alert('Success', `Free gap quiz review added to ${currentDayData.day} ${currentDayData.num} schedule!`);
   };
 
-  // Add Custom Study Block
+  // Add Custom Study Block to current day
   const handleAddBlock = () => {
     if (!newTopic.trim()) {
       Alert.alert('Validation Error', 'Please enter a topic name.');
@@ -244,21 +656,50 @@ export default function PlannerScreen() {
       duration_minutes: mins,
       duration_label: durStr,
       completed: false,
+      type: 'later',
+      icon: '📝',
       badgeColor: '#A5B4FC',
       badgeBg: 'rgba(99, 102, 241, 0.25)',
     };
-    setBlocks((prev) => [...prev, newBlock]);
+
+    setDaySchedules((prev) => {
+      const next = prev.map((d, dIdx) => {
+        if (dIdx !== selectedDayIdx) return d;
+        const updatedBlocks = [...d.blocks, newBlock];
+        const totalMinutes = updatedBlocks.reduce((acc, b) => acc + (b.duration_minutes || 60), 0);
+        const completedMinutes = updatedBlocks
+          .filter((b) => b.completed)
+          .reduce((acc, b) => acc + (b.duration_minutes || 60), 0);
+        const newPct = totalMinutes > 0 ? Math.round((completedMinutes / totalMinutes) * 100) : 0;
+        const compHours = Math.floor(completedMinutes / 60);
+        const compMins = completedMinutes % 60;
+        const totHours = Math.floor(totalMinutes / 60);
+        const totMins = totalMinutes % 60;
+        const remMinutes = Math.max(totalMinutes - completedMinutes, 0);
+        const remHours = Math.floor(remMinutes / 60);
+        const remMins = remMinutes % 60;
+
+        return {
+          ...d,
+          blocks: updatedBlocks,
+          target: {
+            ...d.target,
+            completedStr: `${compHours}h ${compMins > 0 ? `${compMins}m` : '00m'}`,
+            totalStr: `${totHours}h ${totMins > 0 ? `${totMins}m` : '00m'}`,
+            pct: newPct,
+            remainingStr: `${remHours}h ${remMins > 0 ? `${remMins}m` : '0m'}`,
+          },
+        };
+      });
+      return next;
+    });
+
     setNewTopic('');
     setNewStartTime('03:30');
     setNewDuration('60');
     setModalVisible(false);
-    Alert.alert('Success', 'Study block added to timeline!');
+    Alert.alert('Success', `Study block added to ${currentDayData.day} ${currentDayData.num} timeline!`);
   };
-
-  // Daily target calculations
-  const targetMinutes = 270; // 4h 30m
-  const completedMinutes = 90; // Fixed 1h 30m as shown in design or calculated
-  const pct = 33; // Exactly 33% as in reference image
 
   return (
     <ImageBackground
@@ -395,17 +836,21 @@ export default function PlannerScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={s.adaptiveTitleRow}>
-                      <Text style={s.adaptiveTitle}>ML ADAPTIVE ENGINE</Text>
+                      <Text style={s.adaptiveTitle}>{currentDayData.mlBanner.title}</Text>
                       <View style={s.onlineDot} />
                     </View>
                     <Text style={s.adaptiveSub}>
-                      ML Adaptive Pace • <Text style={{ color: '#00DFB2', fontWeight: '700' }}>+45m buffer</Text> inserted...
+                      {currentDayData.mlBanner.subPrefix}
+                      <Text style={{ color: '#00DFB2', fontWeight: '700' }}>
+                        {currentDayData.mlBanner.bufferHighlight}
+                      </Text>
+                      {currentDayData.mlBanner.subSuffix}
                     </Text>
                   </View>
                 </View>
                 <TouchableOpacity
                   style={s.chevronBtn}
-                  onPress={() => Alert.alert('ML Engine Active', 'Dynamic pacing inserts revision buffers based on your topic retention.')}
+                  onPress={() => Alert.alert('ML Engine Active', `Dynamic pacing calculates retention schedules for ${currentDayData.dateStr}.`)}
                 >
                   <Text style={{ color: '#94A3B8', fontSize: 18 }}>⌄</Text>
                 </TouchableOpacity>
@@ -413,7 +858,7 @@ export default function PlannerScreen() {
 
               {/* ── 3. DATE SELECTOR (MON 06, TUE 07, ...) ── */}
               <View style={s.weekRow}>
-                {DAYS_DATA.map((item, i) => {
+                {daySchedules.map((item, i) => {
                   const isSelected = i === selectedDayIdx;
                   return (
                     <TouchableOpacity
@@ -436,119 +881,146 @@ export default function PlannerScreen() {
                     <View style={s.targetIconBox}>
                       <Text style={{ fontSize: 16 }}>🎯</Text>
                     </View>
-                    <Text style={s.targetLabel}>Daily Target</Text>
+                    <Text style={s.targetLabel}>Daily Target ({currentDayData.day})</Text>
                   </View>
                   <View style={s.targetRightGroup}>
                     <Text style={s.targetTime}>
-                      1h 30m <Text style={s.targetMuted}>/ 4h 30m</Text>
+                      {currentDayData.target.completedStr} <Text style={s.targetMuted}>/ {currentDayData.target.totalStr}</Text>
                     </Text>
-                    <Badge label="33%" color="#00DFB2" bg="rgba(0, 223, 178, 0.15)" borderColor="rgba(0, 223, 178, 0.3)" />
+                    <Badge
+                      label={`${currentDayData.target.pct}%`}
+                      color="#00DFB2"
+                      bg="rgba(0, 223, 178, 0.15)"
+                      borderColor="rgba(0, 223, 178, 0.3)"
+                    />
                   </View>
                 </View>
                 <View style={{ marginVertical: 14 }}>
-                  <ProgressBar pct={pct} color="#00DFB2" />
+                  <ProgressBar pct={currentDayData.target.pct} color="#00DFB2" />
                 </View>
                 <View style={s.targetBottomRow}>
                   <Text style={s.remainText}>
-                    Remaining: 3h 0m
+                    Remaining: {currentDayData.target.remainingStr}
                   </Text>
-                  <Text style={s.trackLabel}>⌛ In Progress</Text>
+                  <Text style={s.trackLabel}>{currentDayData.target.status}</Text>
                 </View>
               </View>
 
               {/* ── 5. TIMELINE SECTION HEADER ── */}
               <View style={s.sectionHeader}>
                 <Text style={s.sectionTitle}>TIMELINE</Text>
-                <Text style={s.sectionMeta}>4 Blocks Today</Text>
+                <Text style={s.sectionMeta}>
+                  {currentDayData.blocks.length} Blocks {currentDayData.day === 'MON' ? 'Today' : `on ${currentDayData.day}`}
+                </Text>
               </View>
 
-              {/* ── 6. TIMELINE BLOCKS ── */}
+              {/* ── 6. TIMELINE BLOCKS (DYNAMIC PER SELECTED DAY) ── */}
               <View style={s.timelineList}>
-                {/* Block 1: Data-Structures (Done) */}
-                <TouchableOpacity
-                  style={tb.doneCard}
-                  onPress={() => handleToggleBlock(1)}
-                  activeOpacity={0.8}
-                >
-                  <View style={tb.doneLeft}>
-                    <View style={tb.doneCheckWrap}>
-                      <Text style={{ color: '#00DFB2', fontSize: 13, fontWeight: '900' }}>✓</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <Text style={tb.doneName}>Data-Structures</Text>
-                        <Badge label="RAG: Core Midterm" color="#93C5FD" bg="rgba(59, 130, 246, 0.2)" />
-                      </View>
-                      <Text style={tb.doneTime}>10:00 • 90m</Text>
-                    </View>
-                  </View>
-                  <Text style={tb.doneStatusText}>Done</Text>
-                </TouchableOpacity>
+                {currentDayData.blocks.map((block) => {
+                  // Block Type 1: Completed
+                  if (block.completed) {
+                    return (
+                      <TouchableOpacity
+                        key={block.id}
+                        style={tb.doneCard}
+                        onPress={() => handleToggleBlock(block.id)}
+                        activeOpacity={0.8}
+                      >
+                        <View style={tb.doneLeft}>
+                          <View style={tb.doneCheckWrap}>
+                            <Text style={{ color: '#00DFB2', fontSize: 13, fontWeight: '900' }}>✓</Text>
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                              <Text style={tb.doneName}>{block.topic_name}</Text>
+                              {block.rag_tag && (
+                                <Badge
+                                  label={block.rag_tag}
+                                  color={block.badgeColor || '#93C5FD'}
+                                  bg={block.badgeBg || 'rgba(59, 130, 246, 0.2)'}
+                                />
+                              )}
+                            </View>
+                            <Text style={tb.doneTime}>
+                              {block.start_time} • {block.duration_label || `${block.duration_minutes}m`}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text style={tb.doneStatusText}>Done</Text>
+                      </TouchableOpacity>
+                    );
+                  }
 
-                {/* Block 2: Database Management (Active Sprint) */}
-                <View style={tb.activeCard}>
-                  <View style={tb.activeTopRow}>
-                    <View style={tb.activeBadgeWrap}>
-                      <View style={tb.activeGreenDot} />
-                      <Text style={tb.activeBadgeText}>ACTIVE SPRINT</Text>
-                    </View>
-                    <Badge label="RAG: High Weightage (18 pts)" color="#A5B4FC" bg="rgba(99, 102, 241, 0.25)" />
-                  </View>
-                  <View style={tb.activeRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={tb.activeName}>Database Management</Text>
-                      <Text style={tb.activeTime}>02:00 • 1h 15m</Text>
-                    </View>
-                    <TouchableOpacity onPress={() => handleToggleBlock(2)} activeOpacity={0.8}>
-                      <CountdownTimer initialMinutes={24} initialSeconds={11} />
+                  // Block Type 2: Active Sprint
+                  if (block.type === 'active') {
+                    return (
+                      <View key={block.id} style={tb.activeCard}>
+                        <View style={tb.activeTopRow}>
+                          <View style={tb.activeBadgeWrap}>
+                            <View style={tb.activeGreenDot} />
+                            <Text style={tb.activeBadgeText}>ACTIVE SPRINT</Text>
+                          </View>
+                          {block.rag_tag && (
+                            <Badge
+                              label={block.rag_tag}
+                              color={block.badgeColor || '#A5B4FC'}
+                              bg={block.badgeBg || 'rgba(99, 102, 241, 0.25)'}
+                            />
+                          )}
+                        </View>
+                        <View style={tb.activeRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={tb.activeName}>{block.topic_name}</Text>
+                            <Text style={tb.activeTime}>
+                              {block.start_time} • {block.duration_label || `${block.duration_minutes}m`}
+                            </Text>
+                          </View>
+                          <TouchableOpacity onPress={() => handleToggleBlock(block.id)} activeOpacity={0.8}>
+                            <CountdownTimer
+                              initialMinutes={block.timerMinutes || 24}
+                              initialSeconds={block.timerSeconds || 11}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  }
+
+                  // Block Type 3: Later / Scheduled
+                  return (
+                    <TouchableOpacity
+                      key={block.id}
+                      style={tb.laterCard}
+                      onPress={() => handleToggleBlock(block.id)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={tb.laterLeft}>
+                        <View style={tb.laterIconBox}>
+                          <Text style={{ fontSize: 16 }}>{block.icon || '🕒'}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <Text style={tb.laterName}>{block.topic_name}</Text>
+                            {block.rag_tag && (
+                              <Badge
+                                label={block.rag_tag}
+                                color={block.badgeColor || '#93C5FD'}
+                                bg={block.badgeBg || 'rgba(59, 130, 246, 0.2)'}
+                              />
+                            )}
+                          </View>
+                          <Text style={tb.laterTime}>
+                            {block.start_time} • {block.duration_label || `${block.duration_minutes}m`}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={tb.laterStatusText}>Later</Text>
                     </TouchableOpacity>
-                  </View>
-                </View>
+                  );
+                })}
 
-                {/* Block 3: Operating Systems (Later) */}
-                <TouchableOpacity
-                  style={tb.laterCard}
-                  onPress={() => handleToggleBlock(3)}
-                  activeOpacity={0.8}
-                >
-                  <View style={tb.laterLeft}>
-                    <View style={tb.laterIconBox}>
-                      <Text style={{ fontSize: 16 }}>🕒</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <Text style={tb.laterName}>Operating Systems</Text>
-                        <Badge label="RAG: Buffer +45m" color="#93C5FD" bg="rgba(59, 130, 246, 0.2)" />
-                      </View>
-                      <Text style={tb.laterTime}>05:00 • 105m</Text>
-                    </View>
-                  </View>
-                  <Text style={tb.laterStatusText}>Later</Text>
-                </TouchableOpacity>
-
-                {/* Block 4: Revision & Recall (Later) */}
-                <TouchableOpacity
-                  style={tb.laterCard}
-                  onPress={() => handleToggleBlock(4)}
-                  activeOpacity={0.8}
-                >
-                  <View style={tb.laterLeft}>
-                    <View style={tb.laterIconBox}>
-                      <Text style={{ fontSize: 16 }}>🧠</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <Text style={tb.laterName}>Revision & Recall</Text>
-                        <Badge label="Networks" color="#C4B5FD" bg="rgba(139, 92, 246, 0.2)" />
-                      </View>
-                      <Text style={tb.laterTime}>08:30 • 45m</Text>
-                    </View>
-                  </View>
-                  <Text style={tb.laterStatusText}>Later</Text>
-                </TouchableOpacity>
-
-                {/* Free gap row */}
-                {!freeGapInserted && (
+                {/* Free gap row for current day */}
+                {!currentDayData.freeGapInserted && (
                   <TouchableOpacity style={tb.freeGapCard} onPress={handleInsertFreeGap} activeOpacity={0.8}>
                     <View style={tb.freeGapLeft}>
                       <View style={tb.freeGapPlusCircle}>

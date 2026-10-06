@@ -19,86 +19,15 @@ export const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-const AUTH_STORAGE_KEY = 'studyflow_auth_session_v1';
-
-interface StoredSession {
-  uid: string;
-  email: string;
-  displayName: string;
-  photoURL?: string | null;
-  emailVerified?: boolean;
-}
-
-const getStoredUser = (): FirebaseUser | null => {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const data = window.localStorage.getItem(AUTH_STORAGE_KEY);
-      if (data) {
-        const parsed: StoredSession = JSON.parse(data);
-        if (parsed && parsed.uid && parsed.email) {
-          return {
-            uid: parsed.uid,
-            email: parsed.email,
-            displayName: parsed.displayName || parsed.email.split('@')[0],
-            photoURL: parsed.photoURL || null,
-            emailVerified: parsed.emailVerified ?? true,
-            getIdToken: async () => 'mock-token',
-          } as unknown as FirebaseUser;
-        }
-      }
-    }
-  } catch {
-    // ignore
-  }
-  return null;
-};
-
-const saveStoredUser = (user: FirebaseUser | null) => {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      if (!user) {
-        window.localStorage.removeItem(AUTH_STORAGE_KEY);
-      } else {
-        const payload: StoredSession = {
-          uid: user.uid,
-          email: user.email || 'student@studyflow.ai',
-          displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'Student'),
-          photoURL: user.photoURL || null,
-          emailVerified: user.emailVerified ?? true,
-        };
-        window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(payload));
-      }
-    }
-  } catch {
-    // ignore
-  }
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<FirebaseUser | null>(() => getStoredUser());
-  const [loading, setLoading] = useState<boolean>(() => !getStoredUser());
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Read cached user immediately
-    const initialUser = getStoredUser();
-    if (initialUser) {
-      setUser(initialUser);
-      setLoading(false);
-    }
-
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
-        saveStoredUser(firebaseUser);
         apiFetch('/users/me').catch(() => {});
-      } else {
-        // If firebase reports null, keep existing valid local session if present
-        const local = getStoredUser();
-        if (local) {
-          setUser(local);
-        } else {
-          setUser(null);
-        }
       }
       setLoading(false);
     });
@@ -110,7 +39,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const fbUser = await firebaseSignUp(email, password, displayName);
       setUser(fbUser);
-      saveStoredUser(fbUser);
       apiFetch('/users/me').catch(() => {});
       return fbUser;
     } catch {
@@ -123,7 +51,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } as unknown as FirebaseUser;
 
       setUser(fallbackUser);
-      saveStoredUser(fallbackUser);
       apiFetch('/users/me').catch(() => {});
       return fallbackUser;
     }
@@ -133,7 +60,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const fbUser = await firebaseSignIn(email, password);
       setUser(fbUser);
-      saveStoredUser(fbUser);
       apiFetch('/users/me').catch(() => {});
       return fbUser;
     } catch {
@@ -146,7 +72,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } as unknown as FirebaseUser;
 
       setUser(fallbackUser);
-      saveStoredUser(fallbackUser);
       apiFetch('/users/me').catch(() => {});
       return fallbackUser;
     }
@@ -158,7 +83,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       // ignore
     } finally {
-      saveStoredUser(null);
       setUser(null);
     }
   };
@@ -177,4 +101,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
-
