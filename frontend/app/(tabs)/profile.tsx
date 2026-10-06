@@ -11,6 +11,7 @@ import {
   Modal,
   TextInput,
   Switch,
+  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -149,13 +150,19 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={s.safe} edges={['top']}>
-      {/* ── Toast Floating Banner ── */}
-      {toastMessage && (
-        <View style={s.toastBanner}>
-          <Text style={s.toastText}>{toastMessage}</Text>
-        </View>
-      )}
+    <ImageBackground
+      source={require('../../assets/images/app-bg.jpg')}
+      style={s.bgImage}
+      resizeMode="cover"
+    >
+      <View style={s.bgOverlay} />
+      <SafeAreaView style={s.safe} edges={['top']}>
+        {/* ── Toast Floating Banner ── */}
+        {toastMessage && (
+          <View style={s.toastBanner}>
+            <Text style={s.toastText}>{toastMessage}</Text>
+          </View>
+        )}
 
       {/* ── Top Navigation Bar (Desktop & Web Header) ── */}
       {isDesktop && (
@@ -964,17 +971,28 @@ export default function ProfileScreen() {
         </View>
       </Modal>
     </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
+  bgImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#070D18',
+  },
+  bgOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(4, 9, 18, 0.45)',
+  },
   safe: {
     flex: 1,
-    backgroundColor: '#070D18',
+    backgroundColor: 'transparent',
   },
   scroll: {
     flex: 1,
-    backgroundColor: '#070D18',
+    backgroundColor: 'transparent',
   },
   content: {
     paddingHorizontal: 16,
