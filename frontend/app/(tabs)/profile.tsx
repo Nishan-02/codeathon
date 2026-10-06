@@ -88,9 +88,9 @@ export default function ProfileScreen() {
 
   const memberSince = (user as any)?.metadata?.creationTime
     ? new Date((user as any).metadata.creationTime).toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      })
+      month: 'long',
+      year: 'numeric',
+    })
     : 'October 2026';
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -164,813 +164,813 @@ export default function ProfileScreen() {
           </View>
         )}
 
-      {/* ── Top Navigation Bar (Desktop & Web Header) ── */}
-      {isDesktop && (
-        <View style={s.topNav}>
-          <View style={s.topNavInner}>
-            {/* Logo */}
-            <TouchableOpacity
-              style={s.logoGroup}
-              onPress={() => router.push('/(tabs)')}
-              activeOpacity={0.8}
-            >
-              <View style={s.logoSquare}>
-                <Text style={s.logoIcon}>📖</Text>
-              </View>
-              <View>
-                <Text style={s.logoTitle}>StudyFlow</Text>
-                <Text style={s.logoSubtitle}>AI-Powered Learning</Text>
-              </View>
-            </TouchableOpacity>
-
-            {/* Navigation Links */}
-            <View style={s.navLinks}>
+        {/* ── Top Navigation Bar (Desktop & Web Header) ── */}
+        {isDesktop && (
+          <View style={s.topNav}>
+            <View style={s.topNavInner}>
+              {/* Logo */}
               <TouchableOpacity
-                style={s.navLink}
+                style={s.logoGroup}
                 onPress={() => router.push('/(tabs)')}
-                activeOpacity={0.7}
+                activeOpacity={0.8}
               >
-                <Text style={s.navLinkIcon}>🏠</Text>
-                <Text style={s.navLinkText}>Dashboard</Text>
+                <View style={s.logoSquare}>
+                  <Text style={s.logoIcon}>📖</Text>
+                </View>
+                <View>
+                  <Text style={s.logoTitle}>StudyFlow</Text>
+                  <Text style={s.logoSubtitle}>AI-Powered Learning</Text>
+                </View>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={s.navLink}
-                onPress={() => router.push('/(tabs)/planner')}
-                activeOpacity={0.7}
-              >
-                <Text style={s.navLinkIcon}>📅</Text>
-                <Text style={s.navLinkText}>Study Planner</Text>
-              </TouchableOpacity>
+              {/* Navigation Links */}
+              <View style={s.navLinks}>
+                <TouchableOpacity
+                  style={s.navLink}
+                  onPress={() => router.push('/(tabs)')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.navLinkIcon}>🏠</Text>
+                  <Text style={s.navLinkText}>Dashboard</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[s.navLink, s.navLinkActive]}
-                activeOpacity={0.9}
-              >
-                <Text style={s.navLinkIcon}>👤</Text>
-                <Text style={[s.navLinkText, s.navLinkTextActive]}>Profile</Text>
-                <View style={s.activeIndicator} />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={s.navLink}
+                  onPress={() => router.push('/(tabs)/planner')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.navLinkIcon}>📅</Text>
+                  <Text style={s.navLinkText}>Study Planner</Text>
+                </TouchableOpacity>
 
-              {/* Theme toggle */}
-              <TouchableOpacity
-                style={s.themeBtn}
-                onPress={() => setThemeModalVisible(true)}
-                activeOpacity={0.7}
-              >
-                <Text style={s.themeIcon}>
-                  {themeMode === 'cyber' ? '🌙' : themeMode === 'navy' ? '🌌' : '🖤'}
-                </Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.navLink, s.navLinkActive]}
+                  activeOpacity={0.9}
+                >
+                  <Text style={s.navLinkIcon}>👤</Text>
+                  <Text style={[s.navLinkText, s.navLinkTextActive]}>Profile</Text>
+                  <View style={s.activeIndicator} />
+                </TouchableOpacity>
 
-              {/* User Avatar Chip */}
+                {/* Theme toggle */}
+                <TouchableOpacity
+                  style={s.themeBtn}
+                  onPress={() => setThemeModalVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.themeIcon}>
+                    {themeMode === 'cyber' ? '🌙' : themeMode === 'navy' ? '🌌' : '🖤'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* User Avatar Chip */}
+                <TouchableOpacity
+                  style={s.navAvatar}
+                  onPress={() => setEditModalVisible(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={s.navAvatarText}>{initials.charAt(0) || 'S'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
+        <ScrollView
+          style={s.scroll}
+          contentContainerStyle={[
+            s.content,
+            isDesktop && s.contentDesktop,
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[s.mainContainer, isDesktop && s.mainContainerDesktop]}>
+            {/* ── 1. Hero Profile Card ── */}
+            <View style={s.heroCard}>
+              {/* Edit Profile Button Top Right */}
               <TouchableOpacity
-                style={s.navAvatar}
+                style={s.editBtn}
                 onPress={() => setEditModalVisible(true)}
                 activeOpacity={0.8}
               >
-                <Text style={s.navAvatarText}>{initials.charAt(0) || 'S'}</Text>
+                <Text style={s.editBtnIcon}>✏️</Text>
+                <Text style={s.editBtnText}>Edit Profile</Text>
               </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
 
-      <ScrollView
-        style={s.scroll}
-        contentContainerStyle={[
-          s.content,
-          isDesktop && s.contentDesktop,
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[s.mainContainer, isDesktop && s.mainContainerDesktop]}>
-          {/* ── 1. Hero Profile Card ── */}
-          <View style={s.heroCard}>
-            {/* Edit Profile Button Top Right */}
-            <TouchableOpacity
-              style={s.editBtn}
-              onPress={() => setEditModalVisible(true)}
-              activeOpacity={0.8}
-            >
-              <Text style={s.editBtnIcon}>✏️</Text>
-              <Text style={s.editBtnText}>Edit Profile</Text>
-            </TouchableOpacity>
-
-            {/* Avatar Circle */}
-            <TouchableOpacity
-              style={s.avatarCircle}
-              onPress={() => setEditModalVisible(true)}
-              activeOpacity={0.9}
-            >
-              <Text style={s.avatarInitials}>{initials.charAt(0) || 'S'}</Text>
-            </TouchableOpacity>
-
-            {/* Display Name & Email */}
-            <Text style={s.heroName}>{displayName}</Text>
-            <Text style={s.heroEmail}>{userEmail}</Text>
-
-            {/* Badges */}
-            <View style={s.badgeRow}>
+              {/* Avatar Circle */}
               <TouchableOpacity
-                style={s.activeBadge}
-                activeOpacity={0.8}
-                onPress={() => showToast('Active Learner: You studied 5 days this week! 🎯')}
+                style={s.avatarCircle}
+                onPress={() => setEditModalVisible(true)}
+                activeOpacity={0.9}
               >
-                <View style={s.greenDot} />
-                <Text style={s.activeBadgeText}>Active Learner</Text>
+                <Text style={s.avatarInitials}>{initials.charAt(0) || 'S'}</Text>
               </TouchableOpacity>
 
+              {/* Display Name & Email */}
+              <Text style={s.heroName}>{displayName}</Text>
+              <Text style={s.heroEmail}>{userEmail}</Text>
+
+              {/* Badges */}
+              <View style={s.badgeRow}>
+                <TouchableOpacity
+                  style={s.activeBadge}
+                  activeOpacity={0.8}
+                  onPress={() => showToast('Active Learner: You studied 5 days this week! 🎯')}
+                >
+                  <View style={s.greenDot} />
+                  <Text style={s.activeBadgeText}>Active Learner</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={s.studentBadge}
+                  activeOpacity={0.8}
+                  onPress={() => showToast(`Enrolled: ${university} 🎓`)}
+                >
+                  <Text style={s.studentBadgeIcon}>🎓</Text>
+                  <Text style={s.studentBadgeText}>{academicRole}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* ── 2. Stats Row (3 Colored Glow Cards) ── */}
+            <View style={s.statsGrid}>
+              {/* Sessions Card */}
               <TouchableOpacity
-                style={s.studentBadge}
+                style={[s.statCard, s.statCardTeal]}
                 activeOpacity={0.8}
-                onPress={() => showToast(`Enrolled: ${university} 🎓`)}
+                onPress={() => router.push('/(tabs)')}
               >
-                <Text style={s.studentBadgeIcon}>🎓</Text>
-                <Text style={s.studentBadgeText}>{academicRole}</Text>
+                <View style={s.statLeft}>
+                  <View style={[s.statIconBox, s.statIconTeal]}>
+                    <Text style={s.statEmoji}>📖</Text>
+                  </View>
+                  <View>
+                    <Text style={[s.statNumber, { color: '#00DFB2' }]}>12</Text>
+                    <Text style={s.statLabel}>Sessions</Text>
+                  </View>
+                </View>
+                <Text style={s.statChevron}>›</Text>
+              </TouchableOpacity>
+
+              {/* Day Streak Card */}
+              <TouchableOpacity
+                style={[s.statCard, s.statCardAmber]}
+                activeOpacity={0.8}
+                onPress={() => setStreakModalVisible(true)}
+              >
+                <View style={s.statLeft}>
+                  <View style={[s.statIconBox, s.statIconAmber]}>
+                    <Text style={s.statEmoji}>🔥</Text>
+                  </View>
+                  <View>
+                    <Text style={[s.statNumber, { color: '#F59E0B' }]}>5</Text>
+                    <Text style={s.statLabel}>Day Streak</Text>
+                  </View>
+                </View>
+                <Text style={s.statChevron}>›</Text>
+              </TouchableOpacity>
+
+              {/* Topics Card */}
+              <TouchableOpacity
+                style={[s.statCard, s.statCardPurple]}
+                activeOpacity={0.8}
+                onPress={() => router.push('/(tabs)/subjects')}
+              >
+                <View style={s.statLeft}>
+                  <View style={[s.statIconBox, s.statIconPurple]}>
+                    <Text style={s.statEmoji}>📊</Text>
+                  </View>
+                  <View>
+                    <Text style={[s.statNumber, { color: '#A855F7' }]}>28</Text>
+                    <Text style={s.statLabel}>Topics</Text>
+                  </View>
+                </View>
+                <Text style={s.statChevron}>›</Text>
               </TouchableOpacity>
             </View>
-          </View>
 
-          {/* ── 2. Stats Row (3 Colored Glow Cards) ── */}
-          <View style={s.statsGrid}>
-            {/* Sessions Card */}
-            <TouchableOpacity
-              style={[s.statCard, s.statCardTeal]}
-              activeOpacity={0.8}
-              onPress={() => router.push('/(tabs)')}
-            >
-              <View style={s.statLeft}>
-                <View style={[s.statIconBox, s.statIconTeal]}>
-                  <Text style={s.statEmoji}>📖</Text>
+            {/* ── 3. Account Details Card ── */}
+            <View style={s.sectionCard}>
+              <View style={s.sectionHeader}>
+                <View style={s.sectionIconBox}>
+                  <Text style={s.sectionHeaderEmoji}>👤</Text>
                 </View>
                 <View>
-                  <Text style={[s.statNumber, { color: '#00DFB2' }]}>12</Text>
-                  <Text style={s.statLabel}>Sessions</Text>
+                  <Text style={s.sectionTitle}>Account Details</Text>
+                  <Text style={s.sectionSubtitle}>Your personal details and account information</Text>
                 </View>
               </View>
-              <Text style={s.statChevron}>›</Text>
-            </TouchableOpacity>
 
-            {/* Day Streak Card */}
-            <TouchableOpacity
-              style={[s.statCard, s.statCardAmber]}
-              activeOpacity={0.8}
-              onPress={() => setStreakModalVisible(true)}
-            >
-              <View style={s.statLeft}>
-                <View style={[s.statIconBox, s.statIconAmber]}>
-                  <Text style={s.statEmoji}>🔥</Text>
+              {/* Email Row */}
+              <TouchableOpacity
+                style={s.detailRow}
+                activeOpacity={0.7}
+                onPress={() => copyToClipboard(userEmail, 'Email Address')}
+              >
+                <View style={s.rowLeft}>
+                  <View style={s.rowIconBox}>
+                    <Text style={s.rowEmoji}>✉️</Text>
+                  </View>
+                  <Text style={s.rowLabel}>Email Address</Text>
                 </View>
-                <View>
-                  <Text style={[s.statNumber, { color: '#F59E0B' }]}>5</Text>
-                  <Text style={s.statLabel}>Day Streak</Text>
+                <View style={s.rowRight}>
+                  <Text style={s.rowValue} numberOfLines={1}>{userEmail}</Text>
+                  <Text style={s.rowChevron}>›</Text>
                 </View>
-              </View>
-              <Text style={s.statChevron}>›</Text>
-            </TouchableOpacity>
+              </TouchableOpacity>
 
-            {/* Topics Card */}
-            <TouchableOpacity
-              style={[s.statCard, s.statCardPurple]}
-              activeOpacity={0.8}
-              onPress={() => router.push('/(tabs)/subjects')}
-            >
-              <View style={s.statLeft}>
-                <View style={[s.statIconBox, s.statIconPurple]}>
-                  <Text style={s.statEmoji}>📊</Text>
+              {/* User ID Row */}
+              <TouchableOpacity
+                style={s.detailRow}
+                activeOpacity={0.7}
+                onPress={() => copyToClipboard(fullUserId, 'User ID')}
+              >
+                <View style={s.rowLeft}>
+                  <View style={s.rowIconBox}>
+                    <Text style={s.rowEmoji}>🪪</Text>
+                  </View>
+                  <Text style={s.rowLabel}>User ID</Text>
                 </View>
-                <View>
-                  <Text style={[s.statNumber, { color: '#A855F7' }]}>28</Text>
-                  <Text style={s.statLabel}>Topics</Text>
+                <View style={s.rowRight}>
+                  <Text style={s.rowValue} numberOfLines={1}>{shortUserId}</Text>
+                  <Text style={s.rowChevron}>›</Text>
                 </View>
-              </View>
-              <Text style={s.statChevron}>›</Text>
-            </TouchableOpacity>
-          </View>
+              </TouchableOpacity>
 
-          {/* ── 3. Account Details Card ── */}
-          <View style={s.sectionCard}>
-            <View style={s.sectionHeader}>
-              <View style={s.sectionIconBox}>
-                <Text style={s.sectionHeaderEmoji}>👤</Text>
-              </View>
-              <View>
-                <Text style={s.sectionTitle}>Account Details</Text>
-                <Text style={s.sectionSubtitle}>Your personal details and account information</Text>
-              </View>
+              {/* Member Since Row */}
+              <TouchableOpacity
+                style={s.detailRow}
+                activeOpacity={0.7}
+                onPress={() => showToast(`Member since ${memberSince} 🌟`)}
+              >
+                <View style={s.rowLeft}>
+                  <View style={s.rowIconBox}>
+                    <Text style={s.rowEmoji}>📅</Text>
+                  </View>
+                  <Text style={s.rowLabel}>Member Since</Text>
+                </View>
+                <View style={s.rowRight}>
+                  <Text style={s.rowValue}>{memberSince}</Text>
+                  <Text style={s.rowChevron}>›</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Email Status Row */}
+              <TouchableOpacity
+                style={[s.detailRow, { borderBottomWidth: 0 }]}
+                activeOpacity={0.7}
+                onPress={() => setVerifyModalVisible(true)}
+              >
+                <View style={s.rowLeft}>
+                  <View style={s.rowIconBox}>
+                    <Text style={s.rowEmoji}>🛡️</Text>
+                  </View>
+                  <Text style={s.rowLabel}>Email Status</Text>
+                </View>
+                <View style={s.rowRight}>
+                  <View style={emailVerified ? s.verifiedPill : s.notVerifiedPill}>
+                    <View style={emailVerified ? s.verifiedDot : s.notVerifiedDot} />
+                    <Text style={emailVerified ? s.verifiedText : s.notVerifiedText}>
+                      {emailVerified ? 'Verified' : 'Not verified'}
+                    </Text>
+                  </View>
+                  <Text style={s.rowChevron}>›</Text>
+                </View>
+              </TouchableOpacity>
             </View>
 
-            {/* Email Row */}
-            <TouchableOpacity
-              style={s.detailRow}
-              activeOpacity={0.7}
-              onPress={() => copyToClipboard(userEmail, 'Email Address')}
-            >
-              <View style={s.rowLeft}>
-                <View style={s.rowIconBox}>
-                  <Text style={s.rowEmoji}>✉️</Text>
+            {/* ── 4. Preferences Card ── */}
+            <View style={s.sectionCard}>
+              <View style={s.sectionHeader}>
+                <View style={s.sectionIconBox}>
+                  <Text style={s.sectionHeaderEmoji}>⚙️</Text>
                 </View>
-                <Text style={s.rowLabel}>Email Address</Text>
+                <View>
+                  <Text style={s.sectionTitle}>Preferences</Text>
+                  <Text style={s.sectionSubtitle}>Customize your learning experience</Text>
+                </View>
               </View>
-              <View style={s.rowRight}>
-                <Text style={s.rowValue} numberOfLines={1}>{userEmail}</Text>
-                <Text style={s.rowChevron}>›</Text>
-              </View>
-            </TouchableOpacity>
 
-            {/* User ID Row */}
-            <TouchableOpacity
-              style={s.detailRow}
-              activeOpacity={0.7}
-              onPress={() => copyToClipboard(fullUserId, 'User ID')}
-            >
-              <View style={s.rowLeft}>
-                <View style={s.rowIconBox}>
-                  <Text style={s.rowEmoji}>🪪</Text>
-                </View>
-                <Text style={s.rowLabel}>User ID</Text>
-              </View>
-              <View style={s.rowRight}>
-                <Text style={s.rowValue} numberOfLines={1}>{shortUserId}</Text>
-                <Text style={s.rowChevron}>›</Text>
-              </View>
-            </TouchableOpacity>
-
-            {/* Member Since Row */}
-            <TouchableOpacity
-              style={s.detailRow}
-              activeOpacity={0.7}
-              onPress={() => showToast(`Member since ${memberSince} 🌟`)}
-            >
-              <View style={s.rowLeft}>
-                <View style={s.rowIconBox}>
-                  <Text style={s.rowEmoji}>📅</Text>
-                </View>
-                <Text style={s.rowLabel}>Member Since</Text>
-              </View>
-              <View style={s.rowRight}>
-                <Text style={s.rowValue}>{memberSince}</Text>
-                <Text style={s.rowChevron}>›</Text>
-              </View>
-            </TouchableOpacity>
-
-            {/* Email Status Row */}
-            <TouchableOpacity
-              style={[s.detailRow, { borderBottomWidth: 0 }]}
-              activeOpacity={0.7}
-              onPress={() => setVerifyModalVisible(true)}
-            >
-              <View style={s.rowLeft}>
-                <View style={s.rowIconBox}>
-                  <Text style={s.rowEmoji}>🛡️</Text>
-                </View>
-                <Text style={s.rowLabel}>Email Status</Text>
-              </View>
-              <View style={s.rowRight}>
-                <View style={emailVerified ? s.verifiedPill : s.notVerifiedPill}>
-                  <View style={emailVerified ? s.verifiedDot : s.notVerifiedDot} />
-                  <Text style={emailVerified ? s.verifiedText : s.notVerifiedText}>
-                    {emailVerified ? 'Verified' : 'Not verified'}
-                  </Text>
+              {/* Notifications Row */}
+              <TouchableOpacity
+                style={s.prefRow}
+                activeOpacity={0.7}
+                onPress={() => setNotifModalVisible(true)}
+              >
+                <View style={s.rowLeft}>
+                  <View style={[s.rowIconBox, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
+                    <Text style={s.rowEmoji}>🔔</Text>
+                  </View>
+                  <View>
+                    <Text style={s.prefTitle}>Notifications</Text>
+                    <Text style={s.prefSubtitle}>Manage your notification settings</Text>
+                  </View>
                 </View>
                 <Text style={s.rowChevron}>›</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
+              </TouchableOpacity>
 
-          {/* ── 4. Preferences Card ── */}
-          <View style={s.sectionCard}>
-            <View style={s.sectionHeader}>
-              <View style={s.sectionIconBox}>
-                <Text style={s.sectionHeaderEmoji}>⚙️</Text>
-              </View>
-              <View>
-                <Text style={s.sectionTitle}>Preferences</Text>
-                <Text style={s.sectionSubtitle}>Customize your learning experience</Text>
-              </View>
+              {/* Appearance Row */}
+              <TouchableOpacity
+                style={s.prefRow}
+                activeOpacity={0.7}
+                onPress={() => setThemeModalVisible(true)}
+              >
+                <View style={s.rowLeft}>
+                  <View style={[s.rowIconBox, { backgroundColor: 'rgba(168, 85, 247, 0.15)' }]}>
+                    <Text style={s.rowEmoji}>🌙</Text>
+                  </View>
+                  <View>
+                    <Text style={s.prefTitle}>Appearance</Text>
+                    <Text style={s.prefSubtitle}>
+                      {themeMode === 'cyber' ? 'Cyber Dark (Active)' : themeMode === 'navy' ? 'Midnight Navy' : 'AMOLED Black'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={s.rowChevron}>›</Text>
+              </TouchableOpacity>
+
+              {/* Change Password Row */}
+              <TouchableOpacity
+                style={[s.prefRow, { borderBottomWidth: 0 }]}
+                activeOpacity={0.7}
+                onPress={() => setPwdModalVisible(true)}
+              >
+                <View style={s.rowLeft}>
+                  <View style={[s.rowIconBox, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
+                    <Text style={s.rowEmoji}>🔒</Text>
+                  </View>
+                  <View>
+                    <Text style={s.prefTitle}>Change Password</Text>
+                    <Text style={s.prefSubtitle}>Update your account password</Text>
+                  </View>
+                </View>
+                <Text style={s.rowChevron}>›</Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Notifications Row */}
+            {/* ── 5. Sign Out Button ── */}
             <TouchableOpacity
-              style={s.prefRow}
-              activeOpacity={0.7}
-              onPress={() => setNotifModalVisible(true)}
+              style={[s.signOutBtn, signingOut && { opacity: 0.75 }]}
+              onPress={() => setSignOutModalVisible(true)}
+              disabled={signingOut}
+              activeOpacity={0.8}
             >
-              <View style={s.rowLeft}>
-                <View style={[s.rowIconBox, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
-                  <Text style={s.rowEmoji}>🔔</Text>
+              {signingOut ? (
+                <ActivityIndicator color="#be0505ff" />
+              ) : (
+                <View style={s.signOutContent}>
+                  <Text style={s.signOutIcon}>🚪</Text>
+                  <Text style={s.signOutText}>Sign Out</Text>
                 </View>
-                <View>
-                  <Text style={s.prefTitle}>Notifications</Text>
-                  <Text style={s.prefSubtitle}>Manage your notification settings</Text>
-                </View>
-              </View>
-              <Text style={s.rowChevron}>›</Text>
+              )}
             </TouchableOpacity>
 
-            {/* Appearance Row */}
-            <TouchableOpacity
-              style={s.prefRow}
-              activeOpacity={0.7}
-              onPress={() => setThemeModalVisible(true)}
-            >
-              <View style={s.rowLeft}>
-                <View style={[s.rowIconBox, { backgroundColor: 'rgba(168, 85, 247, 0.15)' }]}>
-                  <Text style={s.rowEmoji}>🌙</Text>
-                </View>
-                <View>
-                  <Text style={s.prefTitle}>Appearance</Text>
-                  <Text style={s.prefSubtitle}>
-                    {themeMode === 'cyber' ? 'Cyber Dark (Active)' : themeMode === 'navy' ? 'Midnight Navy' : 'AMOLED Black'}
-                  </Text>
-                </View>
-              </View>
-              <Text style={s.rowChevron}>›</Text>
-            </TouchableOpacity>
-
-            {/* Change Password Row */}
-            <TouchableOpacity
-              style={[s.prefRow, { borderBottomWidth: 0 }]}
-              activeOpacity={0.7}
-              onPress={() => setPwdModalVisible(true)}
-            >
-              <View style={s.rowLeft}>
-                <View style={[s.rowIconBox, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
-                  <Text style={s.rowEmoji}>🔒</Text>
-                </View>
-                <View>
-                  <Text style={s.prefTitle}>Change Password</Text>
-                  <Text style={s.prefSubtitle}>Update your account password</Text>
-                </View>
-              </View>
-              <Text style={s.rowChevron}>›</Text>
-            </TouchableOpacity>
+            {/* ── 6. Footer ── */}
+            <Text style={s.footerText}>StudyFlow © 2026 • Powered by AI</Text>
+            <View style={{ height: 32 }} />
           </View>
+        </ScrollView>
 
-          {/* ── 5. Sign Out Button ── */}
-          <TouchableOpacity
-            style={[s.signOutBtn, signingOut && { opacity: 0.75 }]}
-            onPress={() => setSignOutModalVisible(true)}
-            disabled={signingOut}
-            activeOpacity={0.8}
-          >
-            {signingOut ? (
-              <ActivityIndicator color="#EF4444" />
-            ) : (
-              <View style={s.signOutContent}>
-                <Text style={s.signOutIcon}>🚪</Text>
-                <Text style={s.signOutText}>Sign Out</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* ── 6. Footer ── */}
-          <Text style={s.footerText}>StudyFlow © 2026 • Powered by AI</Text>
-          <View style={{ height: 32 }} />
-        </View>
-      </ScrollView>
-
-      {/* ══════════════════════════════════════════════════════════════════════
+        {/* ══════════════════════════════════════════════════════════════════════
           MODALS SECTION (Interactive, Cross-Platform)
       ══════════════════════════════════════════════════════════════════════ */}
 
-      {/* ── 1. Edit Profile Modal ── */}
-      <Modal
-        visible={editModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setEditModalVisible(false)}
-      >
-        <View style={s.modalOverlay}>
-          <View style={s.modalCard}>
-            <Text style={s.modalTitle}>✏️ Edit Profile</Text>
-            <Text style={s.modalSub}>Update your personal study credentials</Text>
+        {/* ── 1. Edit Profile Modal ── */}
+        <Modal
+          visible={editModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setEditModalVisible(false)}
+        >
+          <View style={s.modalOverlay}>
+            <View style={s.modalCard}>
+              <Text style={s.modalTitle}>✏️ Edit Profile</Text>
+              <Text style={s.modalSub}>Update your personal study credentials</Text>
 
-            <View style={s.inputWrap}>
-              <Text style={s.inputLabel}>Full Name</Text>
-              <TextInput
-                style={s.modalInput}
-                value={displayName}
-                onChangeText={setDisplayName}
-                placeholder="e.g. Shriharsha"
-                placeholderTextColor="#64748B"
-              />
-            </View>
-
-            <View style={s.inputWrap}>
-              <Text style={s.inputLabel}>Academic Program / Field</Text>
-              <TextInput
-                style={s.modalInput}
-                value={university}
-                onChangeText={setUniversity}
-                placeholder="e.g. Computer Science & Engineering"
-                placeholderTextColor="#64748B"
-              />
-            </View>
-
-            <View style={s.inputWrap}>
-              <Text style={s.inputLabel}>Role</Text>
-              <TextInput
-                style={s.modalInput}
-                value={academicRole}
-                onChangeText={setAcademicRole}
-                placeholder="e.g. Student / Researcher"
-                placeholderTextColor="#64748B"
-              />
-            </View>
-
-            <View style={s.modalBtnRow}>
-              <TouchableOpacity
-                style={s.modalCancelBtn}
-                onPress={() => setEditModalVisible(false)}
-              >
-                <Text style={s.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={s.modalSaveBtn}
-                onPress={handleSaveProfile}
-              >
-                <Text style={s.modalSaveText}>Save Changes</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ── 2. Notification Settings Modal ── */}
-      <Modal
-        visible={notifModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setNotifModalVisible(false)}
-      >
-        <View style={s.modalOverlay}>
-          <View style={s.modalCard}>
-            <Text style={s.modalTitle}>🔔 Notification Settings</Text>
-            <Text style={s.modalSub}>Configure study alerts and AI suggestions</Text>
-
-            <View style={s.toggleRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={s.toggleTitle}>Daily Study Reminders</Text>
-                <Text style={s.toggleSub}>Get notified before scheduled sessions</Text>
+              <View style={s.inputWrap}>
+                <Text style={s.inputLabel}>Full Name</Text>
+                <TextInput
+                  style={s.modalInput}
+                  value={displayName}
+                  onChangeText={setDisplayName}
+                  placeholder="e.g. Shriharsha"
+                  placeholderTextColor="#64748B"
+                />
               </View>
-              <Switch
-                value={notifReminders}
-                onValueChange={setNotifReminders}
-                trackColor={{ false: '#1E293B', true: '#00DFB2' }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
 
-            <View style={s.toggleRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={s.toggleTitle}>Exam Countdown Alerts</Text>
-                <Text style={s.toggleSub}>Daily alerts starting 7 days before exams</Text>
+              <View style={s.inputWrap}>
+                <Text style={s.inputLabel}>Academic Program / Field</Text>
+                <TextInput
+                  style={s.modalInput}
+                  value={university}
+                  onChangeText={setUniversity}
+                  placeholder="e.g. Computer Science & Engineering"
+                  placeholderTextColor="#64748B"
+                />
               </View>
-              <Switch
-                value={notifExams}
-                onValueChange={setNotifExams}
-                trackColor={{ false: '#1E293B', true: '#00DFB2' }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
 
-            <View style={s.toggleRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={s.toggleTitle}>Nova AI Insights</Text>
-                <Text style={s.toggleSub}>Smart study tips and retention warnings</Text>
+              <View style={s.inputWrap}>
+                <Text style={s.inputLabel}>Role</Text>
+                <TextInput
+                  style={s.modalInput}
+                  value={academicRole}
+                  onChangeText={setAcademicRole}
+                  placeholder="e.g. Student / Researcher"
+                  placeholderTextColor="#64748B"
+                />
               </View>
-              <Switch
-                value={notifAI}
-                onValueChange={setNotifAI}
-                trackColor={{ false: '#1E293B', true: '#00DFB2' }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
 
-            <View style={[s.toggleRow, { borderBottomWidth: 0 }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={s.toggleTitle}>Streak & Milestone Badges</Text>
-                <Text style={s.toggleSub}>Celebrations when you maintain your streak</Text>
-              </View>
-              <Switch
-                value={notifStreaks}
-                onValueChange={setNotifStreaks}
-                trackColor={{ false: '#1E293B', true: '#00DFB2' }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
-
-            <View style={s.modalBtnRow}>
-              <TouchableOpacity
-                style={s.modalSaveBtn}
-                onPress={() => {
-                  setNotifModalVisible(false);
-                  showToast('Notification preferences saved! 🔔');
-                }}
-              >
-                <Text style={s.modalSaveText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ── 3. Appearance / Theme Modal ── */}
-      <Modal
-        visible={themeModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setThemeModalVisible(false)}
-      >
-        <View style={s.modalOverlay}>
-          <View style={s.modalCard}>
-            <Text style={s.modalTitle}>🎨 Appearance & Theme</Text>
-            <Text style={s.modalSub}>Select your preferred workspace aesthetic</Text>
-
-            <TouchableOpacity
-              style={[s.themeOption, themeMode === 'cyber' && s.themeOptionActive]}
-              onPress={() => setThemeMode('cyber')}
-              activeOpacity={0.8}
-            >
-              <View style={s.themeOptionLeft}>
-                <Text style={{ fontSize: 20 }}>🌌</Text>
-                <View>
-                  <Text style={s.themeOptionTitle}>Cyber Dark (Default)</Text>
-                  <Text style={s.themeOptionSub}>Teal & emerald neon lighting</Text>
-                </View>
-              </View>
-              {themeMode === 'cyber' && <Text style={s.checkBadge}>✓</Text>}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[s.themeOption, themeMode === 'navy' && s.themeOptionActive]}
-              onPress={() => setThemeMode('navy')}
-              activeOpacity={0.8}
-            >
-              <View style={s.themeOptionLeft}>
-                <Text style={{ fontSize: 20 }}>🌊</Text>
-                <View>
-                  <Text style={s.themeOptionTitle}>Midnight Deep Navy</Text>
-                  <Text style={s.themeOptionSub}>Indigo & sapphire accents</Text>
-                </View>
-              </View>
-              {themeMode === 'navy' && <Text style={s.checkBadge}>✓</Text>}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[s.themeOption, themeMode === 'amoled' && s.themeOptionActive]}
-              onPress={() => setThemeMode('amoled')}
-              activeOpacity={0.8}
-            >
-              <View style={s.themeOptionLeft}>
-                <Text style={{ fontSize: 20 }}>🖤</Text>
-                <View>
-                  <Text style={s.themeOptionTitle}>AMOLED Pitch Black</Text>
-                  <Text style={s.themeOptionSub}>Pure black contrast for OLED screens</Text>
-                </View>
-              </View>
-              {themeMode === 'amoled' && <Text style={s.checkBadge}>✓</Text>}
-            </TouchableOpacity>
-
-            <View style={s.modalBtnRow}>
-              <TouchableOpacity
-                style={s.modalSaveBtn}
-                onPress={() => {
-                  setThemeModalVisible(false);
-                  showToast(`Theme updated to ${themeMode.toUpperCase()}! 🎨`);
-                }}
-              >
-                <Text style={s.modalSaveText}>Apply Theme</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ── 4. Change Password Modal ── */}
-      <Modal
-        visible={pwdModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setPwdModalVisible(false)}
-      >
-        <View style={s.modalOverlay}>
-          <View style={s.modalCard}>
-            <Text style={s.modalTitle}>🔒 Change Password</Text>
-            <Text style={s.modalSub}>Update your account security credentials</Text>
-
-            {pwdError ? <Text style={s.errorAlert}>{pwdError}</Text> : null}
-
-            <View style={s.inputWrap}>
-              <Text style={s.inputLabel}>Current Password</Text>
-              <TextInput
-                style={s.modalInput}
-                value={currPwd}
-                onChangeText={setCurrPwd}
-                placeholder="Enter current password"
-                placeholderTextColor="#64748B"
-                secureTextEntry
-              />
-            </View>
-
-            <View style={s.inputWrap}>
-              <Text style={s.inputLabel}>New Password (min 6 chars)</Text>
-              <TextInput
-                style={s.modalInput}
-                value={newPwd}
-                onChangeText={setNewPwd}
-                placeholder="Enter new password"
-                placeholderTextColor="#64748B"
-                secureTextEntry
-              />
-            </View>
-
-            <View style={s.inputWrap}>
-              <Text style={s.inputLabel}>Confirm New Password</Text>
-              <TextInput
-                style={s.modalInput}
-                value={confirmPwd}
-                onChangeText={setConfirmPwd}
-                placeholder="Re-enter new password"
-                placeholderTextColor="#64748B"
-                secureTextEntry
-              />
-            </View>
-
-            <TouchableOpacity
-              style={s.resetLinkBtn}
-              onPress={handleSendResetEmail}
-              activeOpacity={0.7}
-            >
-              <Text style={s.resetLinkText}>Or send password reset link to email ✉️</Text>
-            </TouchableOpacity>
-
-            <View style={s.modalBtnRow}>
-              <TouchableOpacity
-                style={s.modalCancelBtn}
-                onPress={() => {
-                  setPwdError('');
-                  setPwdModalVisible(false);
-                }}
-              >
-                <Text style={s.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={s.modalSaveBtn}
-                onPress={handleUpdatePassword}
-              >
-                <Text style={s.modalSaveText}>Update Password</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ── 5. Streak Details Modal ── */}
-      <Modal
-        visible={streakModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setStreakModalVisible(false)}
-      >
-        <View style={s.modalOverlay}>
-          <View style={s.modalCard}>
-            <View style={{ alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ fontSize: 44, marginBottom: 8 }}>🔥</Text>
-              <Text style={s.modalTitle}>5-Day Study Streak!</Text>
-              <Text style={[s.modalSub, { textAlign: 'center' }]}>
-                You're in the top 10% of consistent scholars this week.
-              </Text>
-            </View>
-
-            <View style={s.streakWeekRow}>
-              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => {
-                const active = idx < 5;
-                return (
-                  <View key={idx} style={s.dayCircleWrap}>
-                    <View style={[s.dayCircle, active && s.dayCircleActive]}>
-                      <Text style={[s.dayText, active && s.dayTextActive]}>{day}</Text>
-                    </View>
-                    <Text style={s.daySub}>{active ? '✓' : '•'}</Text>
-                  </View>
-                );
-              })}
-            </View>
-
-            <View style={s.streakStatsBox}>
-              <View style={s.streakStatItem}>
-                <Text style={s.streakStatNum}>5</Text>
-                <Text style={s.streakStatLbl}>Current Streak</Text>
-              </View>
-              <View style={s.streakStatDivider} />
-              <View style={s.streakStatItem}>
-                <Text style={s.streakStatNum}>14</Text>
-                <Text style={s.streakStatLbl}>Best Streak</Text>
-              </View>
-              <View style={s.streakStatDivider} />
-              <View style={s.streakStatItem}>
-                <Text style={s.streakStatNum}>28h</Text>
-                <Text style={s.streakStatLbl}>Total Hours</Text>
-              </View>
-            </View>
-
-            <View style={s.modalBtnRow}>
-              <TouchableOpacity
-                style={s.modalSaveBtn}
-                onPress={() => {
-                  setStreakModalVisible(false);
-                  router.push('/(tabs)');
-                }}
-              >
-                <Text style={s.modalSaveText}>Start Today's Session ⚡</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ── 6. Email Verification Modal ── */}
-      <Modal
-        visible={verifyModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setVerifyModalVisible(false)}
-      >
-        <View style={s.modalOverlay}>
-          <View style={s.modalCard}>
-            <Text style={s.modalTitle}>🛡️ Email Verification</Text>
-            <Text style={s.modalSub}>
-              {emailVerified
-                ? 'Your email address is verified and active.'
-                : `Your email (${userEmail}) is currently unverified.`}
-            </Text>
-
-            <View style={s.verifyInfoBox}>
-              <Text style={s.verifyInfoText}>
-                {emailVerified
-                  ? '✅ All security features and cloud sync are fully enabled for your account.'
-                  : '⚠️ Verifying your email ensures seamless cloud backups, password recovery, and AI study synchronization.'}
-              </Text>
-            </View>
-
-            <View style={s.modalBtnRow}>
-              <TouchableOpacity
-                style={s.modalCancelBtn}
-                onPress={() => setVerifyModalVisible(false)}
-              >
-                <Text style={s.modalCancelText}>Close</Text>
-              </TouchableOpacity>
-              {!emailVerified && (
+              <View style={s.modalBtnRow}>
+                <TouchableOpacity
+                  style={s.modalCancelBtn}
+                  onPress={() => setEditModalVisible(false)}
+                >
+                  <Text style={s.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                   style={s.modalSaveBtn}
-                  onPress={handleSendVerification}
+                  onPress={handleSaveProfile}
                 >
-                  <Text style={s.modalSaveText}>Resend Verification ✉️</Text>
+                  <Text style={s.modalSaveText}>Save Changes</Text>
                 </TouchableOpacity>
-              )}
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-      {/* ── 7. Sign Out Confirmation Modal ── */}
-      <Modal
-        visible={signOutModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSignOutModalVisible(false)}
-      >
-        <View style={s.modalOverlay}>
-          <View style={s.modalCard}>
-            <Text style={[s.modalTitle, { color: '#EF4444' }]}>🚪 Sign Out</Text>
-            <Text style={s.modalSub}>Are you sure you want to sign out of your StudyFlow account?</Text>
+        {/* ── 2. Notification Settings Modal ── */}
+        <Modal
+          visible={notifModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setNotifModalVisible(false)}
+        >
+          <View style={s.modalOverlay}>
+            <View style={s.modalCard}>
+              <Text style={s.modalTitle}>🔔 Notification Settings</Text>
+              <Text style={s.modalSub}>Configure study alerts and AI suggestions</Text>
 
-            <View style={s.modalBtnRow}>
+              <View style={s.toggleRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.toggleTitle}>Daily Study Reminders</Text>
+                  <Text style={s.toggleSub}>Get notified before scheduled sessions</Text>
+                </View>
+                <Switch
+                  value={notifReminders}
+                  onValueChange={setNotifReminders}
+                  trackColor={{ false: '#1E293B', true: '#00DFB2' }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
+              <View style={s.toggleRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.toggleTitle}>Exam Countdown Alerts</Text>
+                  <Text style={s.toggleSub}>Daily alerts starting 7 days before exams</Text>
+                </View>
+                <Switch
+                  value={notifExams}
+                  onValueChange={setNotifExams}
+                  trackColor={{ false: '#1E293B', true: '#00DFB2' }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
+              <View style={s.toggleRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.toggleTitle}>Nova AI Insights</Text>
+                  <Text style={s.toggleSub}>Smart study tips and retention warnings</Text>
+                </View>
+                <Switch
+                  value={notifAI}
+                  onValueChange={setNotifAI}
+                  trackColor={{ false: '#1E293B', true: '#00DFB2' }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
+              <View style={[s.toggleRow, { borderBottomWidth: 0 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.toggleTitle}>Streak & Milestone Badges</Text>
+                  <Text style={s.toggleSub}>Celebrations when you maintain your streak</Text>
+                </View>
+                <Switch
+                  value={notifStreaks}
+                  onValueChange={setNotifStreaks}
+                  trackColor={{ false: '#1E293B', true: '#00DFB2' }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
+              <View style={s.modalBtnRow}>
+                <TouchableOpacity
+                  style={s.modalSaveBtn}
+                  onPress={() => {
+                    setNotifModalVisible(false);
+                    showToast('Notification preferences saved! 🔔');
+                  }}
+                >
+                  <Text style={s.modalSaveText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ── 3. Appearance / Theme Modal ── */}
+        <Modal
+          visible={themeModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setThemeModalVisible(false)}
+        >
+          <View style={s.modalOverlay}>
+            <View style={s.modalCard}>
+              <Text style={s.modalTitle}>🎨 Appearance & Theme</Text>
+              <Text style={s.modalSub}>Select your preferred workspace aesthetic</Text>
+
               <TouchableOpacity
-                style={s.modalCancelBtn}
-                onPress={() => setSignOutModalVisible(false)}
-                disabled={signingOut}
+                style={[s.themeOption, themeMode === 'cyber' && s.themeOptionActive]}
+                onPress={() => setThemeMode('cyber')}
+                activeOpacity={0.8}
               >
-                <Text style={s.modalCancelText}>Cancel</Text>
+                <View style={s.themeOptionLeft}>
+                  <Text style={{ fontSize: 20 }}>🌌</Text>
+                  <View>
+                    <Text style={s.themeOptionTitle}>Cyber Dark (Default)</Text>
+                    <Text style={s.themeOptionSub}>Teal & emerald neon lighting</Text>
+                  </View>
+                </View>
+                {themeMode === 'cyber' && <Text style={s.checkBadge}>✓</Text>}
               </TouchableOpacity>
+
               <TouchableOpacity
-                style={[s.modalSaveBtn, { backgroundColor: '#EF4444' }]}
-                onPress={executeSignOut}
-                disabled={signingOut}
+                style={[s.themeOption, themeMode === 'navy' && s.themeOptionActive]}
+                onPress={() => setThemeMode('navy')}
+                activeOpacity={0.8}
               >
-                {signingOut ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={[s.modalSaveText, { color: '#FFFFFF' }]}>Yes, Sign Out</Text>
+                <View style={s.themeOptionLeft}>
+                  <Text style={{ fontSize: 20 }}>🌊</Text>
+                  <View>
+                    <Text style={s.themeOptionTitle}>Midnight Deep Navy</Text>
+                    <Text style={s.themeOptionSub}>Indigo & sapphire accents</Text>
+                  </View>
+                </View>
+                {themeMode === 'navy' && <Text style={s.checkBadge}>✓</Text>}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[s.themeOption, themeMode === 'amoled' && s.themeOptionActive]}
+                onPress={() => setThemeMode('amoled')}
+                activeOpacity={0.8}
+              >
+                <View style={s.themeOptionLeft}>
+                  <Text style={{ fontSize: 20 }}>🖤</Text>
+                  <View>
+                    <Text style={s.themeOptionTitle}>AMOLED Pitch Black</Text>
+                    <Text style={s.themeOptionSub}>Pure black contrast for OLED screens</Text>
+                  </View>
+                </View>
+                {themeMode === 'amoled' && <Text style={s.checkBadge}>✓</Text>}
+              </TouchableOpacity>
+
+              <View style={s.modalBtnRow}>
+                <TouchableOpacity
+                  style={s.modalSaveBtn}
+                  onPress={() => {
+                    setThemeModalVisible(false);
+                    showToast(`Theme updated to ${themeMode.toUpperCase()}! 🎨`);
+                  }}
+                >
+                  <Text style={s.modalSaveText}>Apply Theme</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ── 4. Change Password Modal ── */}
+        <Modal
+          visible={pwdModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setPwdModalVisible(false)}
+        >
+          <View style={s.modalOverlay}>
+            <View style={s.modalCard}>
+              <Text style={s.modalTitle}>🔒 Change Password</Text>
+              <Text style={s.modalSub}>Update your account security credentials</Text>
+
+              {pwdError ? <Text style={s.errorAlert}>{pwdError}</Text> : null}
+
+              <View style={s.inputWrap}>
+                <Text style={s.inputLabel}>Current Password</Text>
+                <TextInput
+                  style={s.modalInput}
+                  value={currPwd}
+                  onChangeText={setCurrPwd}
+                  placeholder="Enter current password"
+                  placeholderTextColor="#64748B"
+                  secureTextEntry
+                />
+              </View>
+
+              <View style={s.inputWrap}>
+                <Text style={s.inputLabel}>New Password (min 6 chars)</Text>
+                <TextInput
+                  style={s.modalInput}
+                  value={newPwd}
+                  onChangeText={setNewPwd}
+                  placeholder="Enter new password"
+                  placeholderTextColor="#64748B"
+                  secureTextEntry
+                />
+              </View>
+
+              <View style={s.inputWrap}>
+                <Text style={s.inputLabel}>Confirm New Password</Text>
+                <TextInput
+                  style={s.modalInput}
+                  value={confirmPwd}
+                  onChangeText={setConfirmPwd}
+                  placeholder="Re-enter new password"
+                  placeholderTextColor="#64748B"
+                  secureTextEntry
+                />
+              </View>
+
+              <TouchableOpacity
+                style={s.resetLinkBtn}
+                onPress={handleSendResetEmail}
+                activeOpacity={0.7}
+              >
+                <Text style={s.resetLinkText}>Or send password reset link to email ✉️</Text>
+              </TouchableOpacity>
+
+              <View style={s.modalBtnRow}>
+                <TouchableOpacity
+                  style={s.modalCancelBtn}
+                  onPress={() => {
+                    setPwdError('');
+                    setPwdModalVisible(false);
+                  }}
+                >
+                  <Text style={s.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={s.modalSaveBtn}
+                  onPress={handleUpdatePassword}
+                >
+                  <Text style={s.modalSaveText}>Update Password</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ── 5. Streak Details Modal ── */}
+        <Modal
+          visible={streakModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setStreakModalVisible(false)}
+        >
+          <View style={s.modalOverlay}>
+            <View style={s.modalCard}>
+              <View style={{ alignItems: 'center', marginBottom: 16 }}>
+                <Text style={{ fontSize: 44, marginBottom: 8 }}>🔥</Text>
+                <Text style={s.modalTitle}>5-Day Study Streak!</Text>
+                <Text style={[s.modalSub, { textAlign: 'center' }]}>
+                  You're in the top 10% of consistent scholars this week.
+                </Text>
+              </View>
+
+              <View style={s.streakWeekRow}>
+                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => {
+                  const active = idx < 5;
+                  return (
+                    <View key={idx} style={s.dayCircleWrap}>
+                      <View style={[s.dayCircle, active && s.dayCircleActive]}>
+                        <Text style={[s.dayText, active && s.dayTextActive]}>{day}</Text>
+                      </View>
+                      <Text style={s.daySub}>{active ? '✓' : '•'}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+
+              <View style={s.streakStatsBox}>
+                <View style={s.streakStatItem}>
+                  <Text style={s.streakStatNum}>5</Text>
+                  <Text style={s.streakStatLbl}>Current Streak</Text>
+                </View>
+                <View style={s.streakStatDivider} />
+                <View style={s.streakStatItem}>
+                  <Text style={s.streakStatNum}>14</Text>
+                  <Text style={s.streakStatLbl}>Best Streak</Text>
+                </View>
+                <View style={s.streakStatDivider} />
+                <View style={s.streakStatItem}>
+                  <Text style={s.streakStatNum}>28h</Text>
+                  <Text style={s.streakStatLbl}>Total Hours</Text>
+                </View>
+              </View>
+
+              <View style={s.modalBtnRow}>
+                <TouchableOpacity
+                  style={s.modalSaveBtn}
+                  onPress={() => {
+                    setStreakModalVisible(false);
+                    router.push('/(tabs)');
+                  }}
+                >
+                  <Text style={s.modalSaveText}>Start Today's Session ⚡</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ── 6. Email Verification Modal ── */}
+        <Modal
+          visible={verifyModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setVerifyModalVisible(false)}
+        >
+          <View style={s.modalOverlay}>
+            <View style={s.modalCard}>
+              <Text style={s.modalTitle}>🛡️ Email Verification</Text>
+              <Text style={s.modalSub}>
+                {emailVerified
+                  ? 'Your email address is verified and active.'
+                  : `Your email (${userEmail}) is currently unverified.`}
+              </Text>
+
+              <View style={s.verifyInfoBox}>
+                <Text style={s.verifyInfoText}>
+                  {emailVerified
+                    ? '✅ All security features and cloud sync are fully enabled for your account.'
+                    : '⚠️ Verifying your email ensures seamless cloud backups, password recovery, and AI study synchronization.'}
+                </Text>
+              </View>
+
+              <View style={s.modalBtnRow}>
+                <TouchableOpacity
+                  style={s.modalCancelBtn}
+                  onPress={() => setVerifyModalVisible(false)}
+                >
+                  <Text style={s.modalCancelText}>Close</Text>
+                </TouchableOpacity>
+                {!emailVerified && (
+                  <TouchableOpacity
+                    style={s.modalSaveBtn}
+                    onPress={handleSendVerification}
+                  >
+                    <Text style={s.modalSaveText}>Resend Verification ✉️</Text>
+                  </TouchableOpacity>
                 )}
-              </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+        </Modal>
+
+        {/* ── 7. Sign Out Confirmation Modal ── */}
+        <Modal
+          visible={signOutModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setSignOutModalVisible(false)}
+        >
+          <View style={s.modalOverlay}>
+            <View style={s.modalCard}>
+              <Text style={[s.modalTitle, { color: '#EF4444' }]}>🚪 Sign Out</Text>
+              <Text style={s.modalSub}>Are you sure you want to sign out of your StudyFlow account?</Text>
+
+              <View style={s.modalBtnRow}>
+                <TouchableOpacity
+                  style={s.modalCancelBtn}
+                  onPress={() => setSignOutModalVisible(false)}
+                  disabled={signingOut}
+                >
+                  <Text style={s.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.modalSaveBtn, { backgroundColor: '#EF4444' }]}
+                  onPress={executeSignOut}
+                  disabled={signingOut}
+                >
+                  {signingOut ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={[s.modalSaveText, { color: '#FFFFFF' }]}>Yes, Sign Out</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </SafeAreaView>
     </ImageBackground>
   );
 }
@@ -1156,8 +1156,8 @@ const s = StyleSheet.create({
     marginBottom: 16,
     ...(Platform.OS === 'web'
       ? ({
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.45)',
-        } as any)
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.45)',
+      } as any)
       : {}),
   },
   editBtn: {
@@ -1278,9 +1278,9 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
     ...(Platform.OS === 'web'
       ? ({
-          transition: 'transform 0.2s, border-color 0.2s',
-          cursor: 'pointer',
-        } as any)
+        transition: 'transform 0.2s, border-color 0.2s',
+        cursor: 'pointer',
+      } as any)
       : {}),
   },
   statCardTeal: {
@@ -1504,9 +1504,9 @@ const s = StyleSheet.create({
     marginBottom: 16,
     ...(Platform.OS === 'web'
       ? ({
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-        } as any)
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+      } as any)
       : {}),
   },
   signOutContent: {

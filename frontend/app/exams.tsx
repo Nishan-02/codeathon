@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Modal, Alert, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Modal,
+  Alert,
+  TouchableOpacity,
+  ImageBackground,
+  StatusBar,
+  Platform,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { ExamService } from '../services/exams';
 import { SubjectService } from '../services/subjects';
 import { Exam } from '../types/exam';
@@ -10,6 +23,7 @@ import { Input } from '../components/common/Input';
 import { formatDate } from '../utils/helpers';
 
 export default function ExamsScreen() {
+  const router = useRouter();
   const [exams, setExams] = useState<Exam[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,7 +76,6 @@ export default function ExamsScreen() {
 
     try {
       setSubmitting(true);
-      // Clean and normalize date (handle spaces or dashes e.g. "2020 10 06" -> "2020-10-06")
       let rawDate = examDate.trim();
       let isoDate: string;
 
@@ -78,31 +91,35 @@ export default function ExamsScreen() {
         }
       }
 
-      const targetSubjectId = selectedSubjectId || (subjects.length > 0 ? subjects[0].id : 1);
-      const subjectObj = subjects.find((s) => s.id === targetSubjectId);
-
       const created = await ExamService.create({
         title: title.trim(),
-        subject_id: targetSubjectId,
+        subject_id: selectedSubjectId || 1,
         exam_date: isoDate,
       });
 
-      const examToAdd: Exam = {
-        id: created?.id || Date.now(),
-        title: title.trim(),
-        subject_id: targetSubjectId,
-        subject_name: created?.subject_name || subjectObj?.name || 'General',
-        exam_date: isoDate,
-        total_modules: created?.total_modules || 4,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      setExams((prev) => [examToAdd, ...prev.filter((e) => e.id !== examToAdd.id)]);
-      setTitle('');
-      setExamDate('');
-      setModalVisible(false);
-      Alert.alert('Success', 'Exam scheduled successfully!');
+      if (created) {
+        setExams((prev) => [created, ...prev]);
+        setTitle('');
+        setExamDate('');
+        setModalVisible(false);
+        Alert.alert('Success', 'Exam scheduled successfully!');
+      } else {
+        const fallbackExam: Exam = {
+          id: Date.now(),
+          title: title.trim(),
+          subject_id: selectedSubjectId || 1,
+          subject_name: subjects.find((s) => s.id === selectedSubjectId)?.name || 'General',
+          exam_date: isoDate,
+          total_modules: 4,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setExams((prev) => [fallbackExam, ...prev]);
+        setTitle('');
+        setExamDate('');
+        setModalVisible(false);
+        Alert.alert('Success', 'Exam scheduled successfully!');
+      }
     } catch {
       const fallbackExam: Exam = {
         id: Date.now(),
@@ -125,157 +142,250 @@ export default function ExamsScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.topRow}>
-        <Text style={styles.headerTitle}>Exams Schedule</Text>
-        <Button
-          title="+ Add Exam"
-          onPress={handleOpenModal}
-          style={styles.addBtn}
-        />
-      </View>
+    <ImageBackground
+      source={require('../assets/images/calendar-bg.jpg')}
+      style={styles.bgImage}
+      resizeMode="cover"
+    >
+      <View style={styles.bgOverlay} />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor="#070D18" />
 
-      <FlatList
-        data={exams}
-        keyExtractor={(item) => item.id.toString()}
-        onRefresh={loadData}
-        refreshing={loading}
-        renderItem={({ item }) => (
-          <Card style={styles.card}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.date}>Date: {formatDate(item.exam_date)}</Text>
-            {item.subject_name ? (
-              <Text style={styles.subjectBadge}>
-                📚 {item.subject_name}
-              </Text>
-            ) : null}
-          </Card>
-        )}
-        ListEmptyComponent={
-          !loading ? (
-            <Text style={styles.emptyText}>No upcoming exams added. Tap "+ Add Exam" to schedule one.</Text>
-          ) : null
-        }
-      />
-
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Schedule New Exam</Text>
-
-            <Input
-              label="Exam Title"
-              placeholder="e.g. physics"
-              value={title}
-              onChangeText={setTitle}
-            />
-
-            <Input
-              label="Exam Date (YYYY-MM-DD)"
-              placeholder="2026-11-15"
-              value={examDate}
-              onChangeText={setExamDate}
-            />
-
-            <Text style={styles.label}>Select Subject</Text>
-            <View style={styles.subjectPicker}>
-              {subjects.length === 0 ? (
+        <View style={styles.container}>
+          <View style={styles.innerWrapper}>
+            <View style={styles.topRow}>
+              <View style={styles.titleGroup}>
                 <TouchableOpacity
-                  style={[styles.subChip, styles.subChipSelected]}
-                  onPress={() => setSelectedSubjectId(1)}
+                  style={styles.backBtn}
+                  onPress={() => router.push('/(tabs)/calendar')}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.chipText}>General / All Subjects</Text>
+                  <Text style={styles.backBtnText}>←</Text>
                 </TouchableOpacity>
-              ) : (
-                subjects.map((sub) => {
+                <View>
+                  <Text style={styles.headerTitle}>Exams Schedule</Text>
+                  <Text style={styles.headerSubtitle}>Upcoming assessments & timeline</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.addExamBtn}
+                onPress={handleOpenModal}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.addBtnText}>+ Add Exam</Text>
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={exams}
+              keyExtractor={(item) => item.id.toString()}
+              onRefresh={loadData}
+              refreshing={loading}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <View style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.title}>{item.title}</Text>
+                    {item.subject_name ? (
+                      <View style={styles.badgeWrap}>
+                        <Text style={styles.subjectBadge}>📚 {item.subject_name}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={styles.date}>Date: {formatDate(item.exam_date)}</Text>
+                </View>
+              )}
+              ListEmptyComponent={
+                !loading ? (
+                  <View style={styles.emptyCard}>
+                    <Text style={{ fontSize: 32, marginBottom: 8 }}>📅</Text>
+                    <Text style={styles.emptyText}>No upcoming exams added. Tap "+ Add Exam" to schedule one.</Text>
+                  </View>
+                ) : null
+              }
+            />
+          </View>
+        </View>
+
+        <Modal visible={modalVisible} animationType="fade" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>⚡ Schedule New Exam</Text>
+
+              <Input
+                label="Exam Title"
+                placeholder="e.g. Physics Midterm"
+                value={title}
+                onChangeText={setTitle}
+              />
+
+              <Input
+                label="Exam Date (YYYY-MM-DD)"
+                placeholder="2026-11-15"
+                value={examDate}
+                onChangeText={setExamDate}
+              />
+
+              <Text style={styles.label}>Select Subject</Text>
+              <View style={styles.subjectPicker}>
+                {subjects.map((sub) => {
                   const isSelected = selectedSubjectId === sub.id;
                   return (
                     <TouchableOpacity
-                      key={`picker-${sub.id}`}
-                      style={[
-                        styles.subChip,
-                        isSelected ? styles.subChipSelected : null,
-                      ]}
+                      key={sub.id}
+                      style={[styles.subChip, isSelected && styles.subChipSelected]}
                       onPress={() => setSelectedSubjectId(sub.id)}
-                      activeOpacity={0.8}
+                      activeOpacity={0.7}
                     >
-                      <Text style={[styles.chipText, isSelected ? styles.chipTextSelected : null]}>
+                      <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
                         {sub.name}
                       </Text>
                     </TouchableOpacity>
                   );
-                })
-              )}
-            </View>
+                })}
+              </View>
 
-            <View style={styles.modalActions}>
-              <Button
-                title="Cancel"
-                variant="secondary"
-                onPress={() => setModalVisible(false)}
-                style={styles.actionBtn}
-              />
-              <Button
-                title="Save Exam"
-                onPress={handleCreateExam}
-                loading={submitting}
-                style={styles.actionBtn}
-              />
+              <View style={styles.modalActions}>
+                <Button
+                  title="Cancel"
+                  variant="secondary"
+                  onPress={() => setModalVisible(false)}
+                  style={styles.actionBtn}
+                />
+                <Button
+                  title="Save Exam"
+                  onPress={handleCreateExam}
+                  loading={submitting}
+                  style={styles.actionBtn}
+                />
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  bgImage: { flex: 1, width: '100%', height: '100%', backgroundColor: '#070D18' },
+  bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(7, 13, 24, 0.65)' },
+  safeArea: { flex: 1 },
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#13131D',
+    alignItems: 'center',
+  },
+  innerWrapper: {
+    width: '100%',
+    maxWidth: 720,
+    flex: 1,
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  titleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  backBtnText: {
+    color: '#00DFB2',
+    fontSize: 18,
+    fontWeight: '800',
   },
   headerTitle: {
     color: '#FFFFFF',
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
-  addBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+  headerSubtitle: {
+    color: '#8E9BAE',
+    fontSize: 12.5,
+    marginTop: 2,
+  },
+  addExamBtn: {
+    backgroundColor: '#00DFB2',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 99,
+    shadowColor: '#00DFB2',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    ...(Platform.OS === 'web' ? ({ cursor: 'pointer' } as any) : {}),
+  },
+  addBtnText: {
+    color: '#071615',
+    fontWeight: '800',
+    fontSize: 13.5,
   },
   card: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#EF4444',
+    backgroundColor: 'rgba(10, 20, 36, 0.72)',
+    borderRadius: 14,
+    padding: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(30, 41, 59, 0.7)',
+    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)' } as any) : {}),
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
   },
   title: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  date: {
-    color: '#9CA3AF',
-    fontSize: 13,
-    marginTop: 4,
+  badgeWrap: {
+    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+    borderRadius: 99,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.3)',
   },
   subjectBadge: {
-    color: '#818CF8',
+    color: '#A5B4FC',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  date: {
+    color: '#8E9BAE',
     fontSize: 13,
-    marginTop: 6,
-    fontWeight: '500',
+    marginTop: 2,
+  },
+  emptyCard: {
+    backgroundColor: 'rgba(10, 20, 36, 0.72)',
+    borderRadius: 14,
+    padding: 32,
+    alignItems: 'center',
+    marginTop: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(30, 41, 59, 0.7)',
   },
   emptyText: {
-    color: '#9CA3AF',
+    color: '#8E9BAE',
     textAlign: 'center',
-    marginTop: 30,
     fontSize: 14,
   },
   modalOverlay: {
@@ -283,24 +393,31 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.75)',
     justifyContent: 'center',
     padding: 20,
+    alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#1E1E2E',
-    borderRadius: 16,
+    backgroundColor: '#0F172A',
+    borderRadius: 20,
     padding: 24,
+    width: '100%',
+    maxWidth: 480,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(0, 223, 178, 0.25)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
   },
   modalTitle: {
     color: '#FFFFFF',
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '800',
     marginBottom: 16,
   },
   label: {
-    color: '#E5E7EB',
-    fontSize: 14,
-    fontWeight: '500',
+    color: '#8E9BAE',
+    fontSize: 12,
+    fontWeight: '700',
     marginTop: 10,
     marginBottom: 8,
   },
@@ -311,24 +428,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   subChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#2A2A3E',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 99,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   subChipSelected: {
-    backgroundColor: '#6366F1',
-    borderColor: '#818CF8',
+    backgroundColor: 'rgba(0, 223, 178, 0.15)',
+    borderColor: '#00DFB2',
   },
   chipText: {
-    color: '#9CA3AF',
-    fontSize: 13,
-    fontWeight: '500',
+    color: '#8E9BAE',
+    fontSize: 12.5,
+    fontWeight: '600',
   },
   chipTextSelected: {
-    color: '#FFFFFF',
+    color: '#00DFB2',
     fontWeight: '700',
   },
   modalActions: {
