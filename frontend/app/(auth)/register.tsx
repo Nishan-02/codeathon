@@ -8,16 +8,15 @@ import {
   ScrollView,
   TextInput,
   Animated,
+  useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../hooks/useAuth';
-import { Colors, Radius } from '../../constants/theme';
 
-// ── Reusable fancy input ──────────────────────────────────────────────────────
-function FancyInput({
+function GlassInput({
   label,
   placeholder,
   value,
@@ -38,15 +37,16 @@ function FancyInput({
 }) {
   const [focused, setFocused] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
+
   return (
-    <View style={fi.wrap}>
-      <Text style={fi.label}>{label}</Text>
-      <View style={[fi.row, focused && fi.rowFocused]}>
-        <Text style={fi.icon}>{icon}</Text>
+    <View style={gi.wrap}>
+      <Text style={gi.label}>{label}</Text>
+      <View style={[gi.row, focused && gi.rowFocused]}>
+        <Text style={gi.icon}>{icon}</Text>
         <TextInput
-          style={fi.input}
+          style={[gi.input, Platform.OS === 'web' ? ({ outline: 'none' } as any) : null]}
           placeholder={placeholder}
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor="#5C6E82"
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !showPwd}
@@ -56,8 +56,12 @@ function FancyInput({
           onBlur={() => setFocused(false)}
         />
         {secureTextEntry && (
-          <TouchableOpacity onPress={() => setShowPwd((v) => !v)} style={{ padding: 4 }}>
-            <Text style={{ color: Colors.textMuted, fontSize: 16 }}>{showPwd ? '🙈' : '👁️'}</Text>
+          <TouchableOpacity
+            onPress={() => setShowPwd((v) => !v)}
+            style={gi.eyeBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Text style={gi.eyeIcon}>{showPwd ? '🙈' : '👁️'}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -65,55 +69,63 @@ function FancyInput({
   );
 }
 
-const fi = StyleSheet.create({
+const gi = StyleSheet.create({
   wrap: { marginBottom: 14 },
-  label: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 6 },
-  row: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#111827',
-    borderRadius: Radius.md, borderWidth: 1.5, borderColor: Colors.border,
-    paddingHorizontal: 14, gap: 10,
+  label: {
+    color: '#CBD5E1',
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 6,
   },
-  rowFocused: { borderColor: Colors.teal },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(13, 22, 38, 0.75)',
+    borderRadius: 14,
+    borderWidth: 1.2,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 16,
+    gap: 12,
+    height: 50,
+  },
+  rowFocused: {
+    borderColor: '#00C9A7',
+    backgroundColor: 'rgba(15, 28, 48, 0.9)',
+    shadowColor: '#00C9A7',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 3,
+  },
   icon: { fontSize: 16 },
-  input: { flex: 1, color: Colors.textPrimary, fontSize: 15, paddingVertical: 14 },
+  input: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 14.5,
+    height: '100%',
+  },
+  eyeBtn: { padding: 4 },
+  eyeIcon: { color: '#94A3B8', fontSize: 16 },
 });
 
-// ── Step indicator ────────────────────────────────────────────────────────────
-function StepDot({ active, done }: { active: boolean; done: boolean }) {
-  return (
-    <View
-      style={{
-        width: 28, height: 28, borderRadius: 99,
-        backgroundColor: done ? Colors.teal : active ? Colors.indigo : '#1E293B',
-        justifyContent: 'center', alignItems: 'center',
-        borderWidth: active && !done ? 2 : 0, borderColor: Colors.indigo,
-      }}
-    >
-      {done && <Text style={{ color: Colors.bg, fontWeight: '700', fontSize: 13 }}>✓</Text>}
-      {active && !done && <View style={{ width: 8, height: 8, borderRadius: 99, backgroundColor: Colors.white }} />}
-    </View>
-  );
-}
-
-// ── Main ──────────────────────────────────────────────────────────────────────
 export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
   const { signUp } = useAuth();
   const router = useRouter();
-  const btnScale = useRef(new Animated.Value(1)).current;
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 960;
 
-  const pressIn = () => Animated.spring(btnScale, { toValue: 0.96, useNativeDriver: true }).start();
+  const btnScale = useRef(new Animated.Value(1)).current;
+  const pressIn = () => Animated.spring(btnScale, { toValue: 0.97, useNativeDriver: true }).start();
   const pressOut = () => Animated.spring(btnScale, { toValue: 1, useNativeDriver: true }).start();
 
-  // Simple step indicator — step 1: name/email, step 2: password
-  const step = name && email ? 2 : 1;
-
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name.trim() || !email.trim() || !password || !confirmPassword) {
       Alert.alert('Validation Error', 'Please fill in all fields.');
       return;
     }
@@ -127,7 +139,7 @@ export default function RegisterScreen() {
     }
     try {
       setLoading(true);
-      await signUp(email, password);
+      await signUp(email.trim(), password);
       router.replace('/(tabs)');
     } catch (err: any) {
       Alert.alert('Registration Failed', err.message || 'Could not create account.');
@@ -138,45 +150,42 @@ export default function RegisterScreen() {
 
   return (
     <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
-          {/* Logo */}
-          <View style={s.logoWrap}>
-            <View style={s.logoCircle}>
-              <Text style={s.logoIcon}>📖</Text>
-            </View>
-            <View>
-              <Text style={s.logoTitle}>StudyFlow</Text>
-              <View style={s.logoTagRow}>
-                <View style={s.onlineDot} />
-                <Text style={s.logoTag}>AI-Powered Learning</Text>
+      {/* Background glow */}
+      <View style={[s.bgGlowTopLeft, Platform.OS === 'web' ? ({ filter: 'blur(90px)' } as any) : null]} />
+      <View style={[s.bgGlowBottomRight, Platform.OS === 'web' ? ({ filter: 'blur(100px)' } as any) : null]} />
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={[s.scroll, isDesktop && s.scrollDesktop]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View
+            style={[
+              s.card,
+              isDesktop && s.cardDesktop,
+              Platform.OS === 'web' ? ({ backdropFilter: 'blur(24px)' } as any) : null,
+            ]}
+          >
+            {/* Header */}
+            <View style={s.brandHeader}>
+              <View style={s.logoSquare}>
+                <Text style={s.logoBookIcon}>📖</Text>
+              </View>
+              <View>
+                <Text style={s.brandTitle}>StudyFlow</Text>
+                <Text style={s.brandSubtitle}>AI-Powered Learning</Text>
               </View>
             </View>
-          </View>
 
-          {/* Steps */}
-          <View style={s.stepsRow}>
-            <StepDot active={step === 1} done={step > 1} />
-            <View style={[s.stepLine, { backgroundColor: step > 1 ? Colors.teal : Colors.border }]} />
-            <StepDot active={step === 2} done={false} />
-            <View style={[s.stepLine, { backgroundColor: Colors.border }]} />
-            <StepDot active={false} done={false} />
-          </View>
-          <View style={s.stepLabels}>
-            <Text style={[s.stepLbl, { color: step >= 1 ? Colors.teal : Colors.textMuted }]}>Profile</Text>
-            <Text style={[s.stepLbl, { color: step >= 2 ? Colors.teal : Colors.textMuted }]}>Security</Text>
-            <Text style={[s.stepLbl, { color: Colors.textMuted }]}>Done</Text>
-          </View>
+            <View style={s.welcomeWrap}>
+              <Text style={s.welcomeTitle}>Create Account ✨</Text>
+              <Text style={s.welcomeSub}>Start your AI-powered study journey today</Text>
+            </View>
 
-          {/* Headline */}
-          <View style={s.headWrap}>
-            <Text style={s.headline}>Create Account ✨</Text>
-            <Text style={s.sub}>Start your AI-powered study journey today</Text>
-          </View>
-
-          {/* Form */}
-          <View style={s.form}>
-            <FancyInput
+            <GlassInput
               label="Full Name"
               placeholder="John Doe"
               value={name}
@@ -184,7 +193,7 @@ export default function RegisterScreen() {
               autoCapitalize="words"
               icon="👤"
             />
-            <FancyInput
+            <GlassInput
               label="Email Address"
               placeholder="student@example.com"
               keyboardType="email-address"
@@ -192,7 +201,7 @@ export default function RegisterScreen() {
               onChangeText={setEmail}
               icon="✉️"
             />
-            <FancyInput
+            <GlassInput
               label="Password"
               placeholder="Minimum 6 characters"
               secureTextEntry
@@ -200,7 +209,7 @@ export default function RegisterScreen() {
               onChangeText={setPassword}
               icon="🔒"
             />
-            <FancyInput
+            <GlassInput
               label="Confirm Password"
               placeholder="Re-enter your password"
               secureTextEntry
@@ -220,8 +229,8 @@ export default function RegisterScreen() {
                       {
                         backgroundColor:
                           password.length >= i * 3
-                            ? i <= 1 ? Colors.red : i <= 2 ? Colors.amber : i <= 3 ? Colors.indigo : Colors.teal
-                            : Colors.border,
+                            ? i <= 1 ? '#EF4444' : i <= 2 ? '#F59E0B' : i <= 3 ? '#6366F1' : '#00C9A7'
+                            : 'rgba(255, 255, 255, 0.1)',
                       },
                     ]}
                   />
@@ -232,40 +241,48 @@ export default function RegisterScreen() {
               </View>
             )}
 
-            {/* Register button */}
-            <Animated.View style={[{ transform: [{ scale: btnScale }] }, { marginTop: 6 }]}>
+            {/* Submit CTA */}
+            <Animated.View style={[{ transform: [{ scale: btnScale }] }, { marginTop: 10 }]}>
               <TouchableOpacity
-                style={[s.regBtn, loading && { opacity: 0.7 }]}
+                style={[s.signInBtn, loading && { opacity: 0.75 }]}
                 onPress={handleRegister}
                 onPressIn={pressIn}
                 onPressOut={pressOut}
                 disabled={loading}
-                activeOpacity={1}
+                activeOpacity={0.9}
               >
-                <Text style={s.regBtnText}>{loading ? 'Creating account...' : 'Create Account  →'}</Text>
+                <Text style={s.signInText}>
+                  {loading ? 'Creating account...' : 'Create Account  →'}
+                </Text>
               </TouchableOpacity>
             </Animated.View>
 
             {/* Terms */}
             <Text style={s.terms}>
-              By creating an account you agree to our{' '}
-              <Text style={{ color: Colors.teal }}>Terms of Service</Text> &{' '}
-              <Text style={{ color: Colors.teal }}>Privacy Policy</Text>.
+              By signing up you agree to our{' '}
+              <Text style={{ color: '#00C9A7' }}>Terms</Text> &{' '}
+              <Text style={{ color: '#00C9A7' }}>Privacy Policy</Text>.
             </Text>
 
             {/* Divider */}
             <View style={s.dividerRow}>
               <View style={s.dividerLine} />
-              <Text style={s.dividerText}>already have an account?</Text>
+              <Text style={s.dividerText}>or</Text>
               <View style={s.dividerLine} />
             </View>
 
-            <TouchableOpacity style={s.loginBtn} onPress={() => router.push('/(auth)/login')}>
-              <Text style={s.loginText}>Sign In</Text>
+            {/* Login Link */}
+            <TouchableOpacity
+              style={s.createAccountBtn}
+              onPress={() => router.push('/(auth)/login')}
+              activeOpacity={0.7}
+            >
+              <Text style={s.createAccountText}>
+                Already have an account?{' '}
+                <Text style={s.createAccountHighlight}>Sign In</Text>
+              </Text>
             </TouchableOpacity>
           </View>
-
-          <View style={{ height: 24 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -273,53 +290,183 @@ export default function RegisterScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.bg },
-  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32 },
-
-  logoWrap: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 },
-  logoCircle: {
-    width: 44, height: 44, borderRadius: 12, backgroundColor: Colors.teal,
-    justifyContent: 'center', alignItems: 'center',
+  safe: {
+    flex: 1,
+    backgroundColor: '#060A10',
   },
-  logoIcon: { fontSize: 22 },
-  logoTitle: { color: Colors.textPrimary, fontSize: 19, fontWeight: '800' },
-  logoTagRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  onlineDot: { width: 6, height: 6, borderRadius: 99, backgroundColor: Colors.teal },
-  logoTag: { color: Colors.teal, fontSize: 12, fontWeight: '600' },
-
-  stepsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  stepLine: { flex: 1, height: 2, marginHorizontal: 4 },
-  stepLabels: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 },
-  stepLbl: { fontSize: 11, fontWeight: '700', flex: 1, textAlign: 'center' },
-
-  headWrap: { marginBottom: 20 },
-  headline: { color: Colors.textPrimary, fontSize: 26, fontWeight: '800', marginBottom: 4 },
-  sub: { color: Colors.textSecondary, fontSize: 14 },
-
-  form: {},
-
-  strengthRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
-  strengthBar: { flex: 1, height: 4, borderRadius: 99 },
-  strengthLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '600', width: 45 },
-
-  regBtn: {
-    backgroundColor: Colors.teal, borderRadius: Radius.md,
-    paddingVertical: 16, alignItems: 'center',
-    shadowColor: Colors.teal, shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35, shadowRadius: 10, elevation: 6,
+  scroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 20,
   },
-  regBtnText: { color: Colors.bg, fontWeight: '800', fontSize: 16 },
-
-  terms: { color: Colors.textMuted, fontSize: 12, textAlign: 'center', marginTop: 12, lineHeight: 18 },
-
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 18, gap: 8 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
-  dividerText: { color: Colors.textMuted, fontSize: 12 },
-
-  loginBtn: {
-    backgroundColor: '#111827', borderRadius: Radius.md,
-    paddingVertical: 14, alignItems: 'center',
-    borderWidth: 1, borderColor: Colors.border,
+  scrollDesktop: {
+    paddingVertical: 48,
+    paddingHorizontal: 48,
   },
-  loginText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  bgGlowTopLeft: {
+    position: 'absolute',
+    top: -120,
+    left: -120,
+    width: 450,
+    height: 450,
+    borderRadius: 225,
+    backgroundColor: 'rgba(0, 201, 167, 0.08)',
+  },
+  bgGlowBottomRight: {
+    position: 'absolute',
+    bottom: -100,
+    right: -100,
+    width: 550,
+    height: 550,
+    borderRadius: 275,
+    backgroundColor: 'rgba(0, 201, 167, 0.14)',
+  },
+
+  card: {
+    width: '100%',
+    maxWidth: 480,
+    backgroundColor: 'rgba(12, 20, 34, 0.78)',
+    borderRadius: 26,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 201, 167, 0.25)',
+    paddingHorizontal: 28,
+    paddingVertical: 34,
+    shadowColor: '#00C9A7',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 35,
+    elevation: 10,
+  },
+  cardDesktop: {
+    width: 520,
+    maxWidth: 540,
+    paddingHorizontal: 36,
+    paddingVertical: 38,
+  },
+
+  brandHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 20,
+  },
+  logoSquare: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#00C9A7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#00C9A7',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  logoBookIcon: {
+    fontSize: 22,
+  },
+  brandTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  brandSubtitle: {
+    color: '#00C9A7',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+
+  welcomeWrap: {
+    marginBottom: 22,
+  },
+  welcomeTitle: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  welcomeSub: {
+    color: '#94A3B8',
+    fontSize: 13.5,
+  },
+
+  strengthRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 14,
+  },
+  strengthBar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 99,
+  },
+  strengthLabel: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '600',
+    width: 45,
+  },
+
+  signInBtn: {
+    backgroundColor: '#00DFB2',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#00DFB2',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  signInText: {
+    color: '#05131C',
+    fontWeight: '800',
+    fontSize: 16,
+    letterSpacing: 0.3,
+  },
+
+  terms: {
+    color: '#64748B',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 12,
+    lineHeight: 18,
+  },
+
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 18,
+    gap: 14,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  dividerText: {
+    color: '#64748B',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+
+  createAccountBtn: {
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  createAccountText: {
+    color: '#94A3B8',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  createAccountHighlight: {
+    color: '#00C9A7',
+    fontWeight: '700',
+  },
 });
