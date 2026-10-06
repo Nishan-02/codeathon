@@ -21,7 +21,7 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isDesktop = width >= 768;
+  const isDesktop = width >= 860;
 
   // ── Local State & Modals ──────────────────────────────────────────────────
   const [signingOut, setSigningOut] = useState(false);
@@ -164,13 +164,14 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* ── Top Navigation Bar (Desktop & Web Header) ── */}
-        {isDesktop && (
-          <View style={s.topNav}>
-            <View style={s.topNavInner}>
-              {/* Logo */}
+        <View style={s.pageWrapper}>
+          {/* ══════════════════════════════════════════════════════════════════════
+              1. LEFT SIDEBAR (Desktop only)
+          ══════════════════════════════════════════════════════════════════════ */}
+          {isDesktop && (
+            <View style={s.sidebar}>
               <TouchableOpacity
-                style={s.logoGroup}
+                style={s.sidebarLogo}
                 onPress={() => router.push('/(tabs)')}
                 activeOpacity={0.8}
               >
@@ -183,68 +184,72 @@ export default function ProfileScreen() {
                 </View>
               </TouchableOpacity>
 
-              {/* Navigation Links */}
-              <View style={s.navLinks}>
+              <View style={s.navMenu}>
                 <TouchableOpacity
-                  style={s.navLink}
+                  style={s.navItem}
                   onPress={() => router.push('/(tabs)')}
                   activeOpacity={0.7}
                 >
-                  <Text style={s.navLinkIcon}>🏠</Text>
-                  <Text style={s.navLinkText}>Dashboard</Text>
+                  <Text style={s.navIcon}>🏠</Text>
+                  <Text style={s.navLabel}>Today</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={s.navLink}
+                  style={s.navItem}
+                  onPress={() => router.push('/(tabs)/subjects')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.navIcon}>📚</Text>
+                  <Text style={s.navLabel}>Subjects</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={s.navItem}
                   onPress={() => router.push('/(tabs)/planner')}
                   activeOpacity={0.7}
                 >
-                  <Text style={s.navLinkIcon}>📅</Text>
-                  <Text style={s.navLinkText}>Study Planner</Text>
+                  <Text style={s.navIcon}>⚡</Text>
+                  <Text style={s.navLabel}>Planner</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[s.navLink, s.navLinkActive]}
-                  activeOpacity={0.9}
-                >
-                  <Text style={s.navLinkIcon}>👤</Text>
-                  <Text style={[s.navLinkText, s.navLinkTextActive]}>Profile</Text>
-                  <View style={s.activeIndicator} />
-                </TouchableOpacity>
-
-                {/* Theme toggle */}
-                <TouchableOpacity
-                  style={s.themeBtn}
-                  onPress={() => setThemeModalVisible(true)}
+                  style={s.navItem}
+                  onPress={() => router.push('/(tabs)/calendar')}
                   activeOpacity={0.7}
                 >
-                  <Text style={s.themeIcon}>
-                    {themeMode === 'cyber' ? '🌙' : themeMode === 'navy' ? '🌌' : '🖤'}
-                  </Text>
+                  <Text style={s.navIcon}>📅</Text>
+                  <Text style={s.navLabel}>Calendar</Text>
                 </TouchableOpacity>
 
-                {/* User Avatar Chip */}
                 <TouchableOpacity
-                  style={s.navAvatar}
-                  onPress={() => setEditModalVisible(true)}
-                  activeOpacity={0.8}
+                  style={s.navItem}
+                  onPress={() => router.push('/(tabs)/progress')}
+                  activeOpacity={0.7}
                 >
-                  <Text style={s.navAvatarText}>{initials.charAt(0) || 'S'}</Text>
+                  <Text style={s.navIcon}>📊</Text>
+                  <Text style={s.navLabel}>Progress</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[s.navItem, s.navItemActive]}
+                  activeOpacity={0.9}
+                >
+                  <Text style={[s.navIcon, s.navIconActive]}>👤</Text>
+                  <Text style={[s.navLabel, s.navLabelActive]}>Profile</Text>
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
-        )}
+          )}
 
-        <ScrollView
-          style={s.scroll}
-          contentContainerStyle={[
-            s.content,
-            isDesktop && s.contentDesktop,
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={[s.mainContainer, isDesktop && s.mainContainerDesktop]}>
+          <ScrollView
+            style={s.scroll}
+            contentContainerStyle={[
+              s.content,
+              isDesktop && s.contentDesktop,
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={[s.mainContainer, isDesktop && s.mainContainerDesktop]}>
             {/* ── 1. Hero Profile Card ── */}
             <View style={s.heroCard}>
               {/* Edit Profile Button Top Right */}
@@ -530,6 +535,7 @@ export default function ProfileScreen() {
             <View style={{ height: 32 }} />
           </View>
         </ScrollView>
+      </View>
 
         {/* ══════════════════════════════════════════════════════════════════════
           MODALS SECTION (Interactive, Cross-Platform)
@@ -1035,112 +1041,85 @@ const s = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // ── Top Nav ───────────────────────────────────────────────────────────────
-  topNav: {
-    width: '100%',
-    backgroundColor: '#09121F',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-  },
-  topNavInner: {
-    maxWidth: 1040,
-    width: '100%',
-    alignSelf: 'center',
+  // ── Page Wrapper & Sidebar ───────────────────────────────────────────────
+  pageWrapper: {
+    flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  logoGroup: {
+  sidebar: {
+    width: 230,
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(0, 223, 178, 0.15)',
+    backgroundColor: 'rgba(7, 14, 26, 0.75)',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(20px)' } as any) : {}),
+  },
+  sidebarLogo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginBottom: 32,
+    paddingHorizontal: 6,
   },
   logoSquare: {
-    width: 38,
-    height: 38,
+    width: 36,
+    height: 36,
     borderRadius: 10,
     backgroundColor: '#00DFB2',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#00DFB2',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowRadius: 6,
   },
   logoIcon: {
-    fontSize: 20,
+    fontSize: 18,
   },
   logoTitle: {
     color: '#FFFFFF',
-    fontSize: 18,
     fontWeight: '800',
-    letterSpacing: -0.3,
+    fontSize: 17,
+    letterSpacing: -0.2,
   },
   logoSubtitle: {
-    color: '#8E9BAE',
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  navLinks: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 24,
-  },
-  navLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    position: 'relative',
-  },
-  navLinkActive: {},
-  navLinkIcon: {
-    fontSize: 16,
-  },
-  navLinkText: {
-    color: '#8E9BAE',
-    fontSize: 14,
+    color: '#00DFB2',
+    fontSize: 10.5,
     fontWeight: '600',
   },
-  navLinkTextActive: {
+  navMenu: {
+    gap: 6,
+  },
+  navItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    ...(Platform.OS === 'web' ? ({ cursor: 'pointer' } as any) : {}),
+  },
+  navItemActive: {
+    backgroundColor: 'rgba(0, 223, 178, 0.12)',
+    borderWidth: 1.5,
+    borderColor: '#00DFB2',
+  },
+  navIcon: {
+    fontSize: 16,
+    opacity: 0.7,
+  },
+  navIconActive: {
+    opacity: 1,
+  },
+  navLabel: {
+    color: '#8E9BAE',
+    fontSize: 13.5,
+    fontWeight: '600',
+  },
+  navLabelActive: {
     color: '#00DFB2',
-  },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: -12,
-    left: 0,
-    right: 0,
-    height: 2.5,
-    backgroundColor: '#00DFB2',
-    borderRadius: 2,
-  },
-  themeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  themeIcon: {
-    fontSize: 16,
-  },
-  navAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#00DFB2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 4,
-  },
-  navAvatarText: {
-    color: '#072B28',
-    fontWeight: '800',
-    fontSize: 16,
+    fontWeight: '700',
   },
 
   // ── Hero Profile Card ─────────────────────────────────────────────────────
