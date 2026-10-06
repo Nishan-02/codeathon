@@ -52,12 +52,13 @@ function GlassInput({
                   outline: 'none',
                   backgroundColor: 'transparent',
                   color: '#FFFFFF',
-                  WebkitBoxShadow: '0 0 0 1000px transparent inset',
+                  WebkitBoxShadow: '0 0 0 1000px rgba(12, 22, 36, 0.95) inset',
+                  WebkitTextFillColor: '#FFFFFF',
                 } as any)
               : null,
           ]}
           placeholder={placeholder}
-          placeholderTextColor="#5C6E82"
+          placeholderTextColor="#64748B"
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !showPwd}
@@ -73,7 +74,7 @@ function GlassInput({
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             activeOpacity={0.7}
           >
-            <Text style={gi.eyeIcon}>{showPwd ? '🙈' : '👁️'}</Text>
+            <Text style={{ color: showPwd ? '#00DFB2' : '#8E9BAE', fontSize: 16 }}>{showPwd ? '🙈' : '👁️'}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -92,7 +93,7 @@ const gi = StyleSheet.create({
   box: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(15, 25, 42, 0.72)',
+    backgroundColor: 'rgba(12, 22, 36, 0.72)',
     borderRadius: 14,
     borderWidth: 1.2,
     borderColor: 'rgba(255, 255, 255, 0.12)',
@@ -102,10 +103,10 @@ const gi = StyleSheet.create({
   },
   boxFocused: {
     borderColor: '#00DFB2',
-    backgroundColor: 'rgba(18, 32, 54, 0.88)',
+    backgroundColor: 'rgba(14, 28, 46, 0.88)',
     shadowColor: '#00DFB2',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.45,
     shadowRadius: 10,
     elevation: 4,
   },
@@ -114,12 +115,10 @@ const gi = StyleSheet.create({
     flex: 1,
     color: '#FFFFFF',
     fontSize: 14.5,
-    backgroundColor: 'transparent',
     height: '100%',
-    padding: 0,
+    paddingVertical: 0,
   },
   eyeBtn: { padding: 4 },
-  eyeIcon: { color: '#94A3B8', fontSize: 16 },
 });
 
 export default function RegisterScreen() {
@@ -132,7 +131,7 @@ export default function RegisterScreen() {
   const { signUp } = useAuth();
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isDesktop = width >= 900;
+  const isDesktop = width >= 920;
 
   const btnScale = useRef(new Animated.Value(1)).current;
   const pressIn = () => Animated.spring(btnScale, { toValue: 0.97, useNativeDriver: true }).start();
@@ -176,30 +175,27 @@ export default function RegisterScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
-            contentContainerStyle={[
-              s.scroll,
-              isDesktop && s.scrollDesktop,
-            ]}
+            contentContainerStyle={[s.scroll, isDesktop && s.scrollDesktop]}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={[s.cardWrapper, isDesktop && s.cardWrapperDesktop]}>
+            <View style={[s.layoutWrapper, isDesktop && s.layoutWrapperDesktop]}>
               <View
                 style={[
                   s.card,
                   isDesktop && s.cardDesktop,
                   Platform.OS === 'web'
                     ? ({
-                        backdropFilter: 'blur(28px) saturate(180%)',
-                        WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+                        backdropFilter: 'blur(32px) saturate(190%)',
+                        WebkitBackdropFilter: 'blur(32px) saturate(190%)',
                         boxShadow:
-                          '0 0 50px rgba(0, 223, 178, 0.16), 0 30px 60px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                          '0 0 50px rgba(0, 223, 178, 0.2), 0 25px 50px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.18)',
                       } as any)
                     : null,
                 ]}
               >
                 {/* Header */}
                 <View style={s.brandRow}>
-                  <View style={s.logoBadge}>
+                  <View style={s.logoSquare}>
                     <Text style={s.logoIcon}>📖</Text>
                   </View>
                   <View>
@@ -208,8 +204,8 @@ export default function RegisterScreen() {
                   </View>
                 </View>
 
-                <View style={s.welcomeBox}>
-                  <Text style={s.welcomeHeading}>Create Account ✨</Text>
+                <View style={s.welcomeWrap}>
+                  <Text style={s.welcomeTitle}>Create Account ✨</Text>
                   <Text style={s.welcomeSub}>Start your AI-powered study journey today</Text>
                 </View>
 
@@ -272,14 +268,14 @@ export default function RegisterScreen() {
                 {/* Submit CTA */}
                 <Animated.View style={[{ transform: [{ scale: btnScale }] }, { marginTop: 10 }]}>
                   <TouchableOpacity
-                    style={[s.ctaButton, loading && { opacity: 0.75 }]}
+                    style={[s.signInBtn, loading && { opacity: 0.75 }]}
                     onPress={handleRegister}
                     onPressIn={pressIn}
                     onPressOut={pressOut}
                     disabled={loading}
                     activeOpacity={0.9}
                   >
-                    <Text style={s.ctaText}>
+                    <Text style={s.signInText}>
                       {loading ? 'Creating account...' : 'Create Account  →'}
                     </Text>
                   </TouchableOpacity>
@@ -293,15 +289,15 @@ export default function RegisterScreen() {
                 </Text>
 
                 {/* Divider */}
-                <View style={s.dividerContainer}>
-                  <View style={s.dividerBar} />
-                  <Text style={s.dividerLabel}>or</Text>
-                  <View style={s.dividerBar} />
+                <View style={s.dividerRow}>
+                  <View style={s.dividerLine} />
+                  <Text style={s.dividerText}>or</Text>
+                  <View style={s.dividerLine} />
                 </View>
 
                 {/* Login Link */}
                 <TouchableOpacity
-                  style={s.createAccountRow}
+                  style={s.createAccountBtn}
                   onPress={() => router.push('/(auth)/login')}
                   activeOpacity={0.7}
                 >
@@ -332,7 +328,7 @@ const s = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(6, 10, 16, 0.45)',
+    backgroundColor: 'rgba(4, 8, 14, 0.35)',
   },
   safe: {
     flex: 1,
@@ -348,31 +344,31 @@ const s = StyleSheet.create({
     paddingVertical: 48,
     paddingHorizontal: 64,
   },
-  cardWrapper: {
+  layoutWrapper: {
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardWrapperDesktop: {
+  layoutWrapperDesktop: {
     width: '100%',
-    maxWidth: 1200,
+    maxWidth: 1280,
     alignItems: 'flex-start',
-    paddingLeft: 60,
+    paddingLeft: 40,
   },
 
   card: {
     width: '100%',
     maxWidth: 480,
-    backgroundColor: 'rgba(10, 20, 34, 0.65)',
-    borderRadius: 28,
-    borderWidth: 1.5,
-    borderColor: 'rgba(0, 229, 187, 0.35)',
+    backgroundColor: 'rgba(9, 18, 30, 0.65)',
+    borderRadius: 26,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 223, 178, 0.38)',
     paddingHorizontal: 32,
-    paddingVertical: 36,
+    paddingVertical: 34,
     shadowColor: '#00DFB2',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.25,
-    shadowRadius: 35,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.22,
+    shadowRadius: 36,
     elevation: 12,
   },
   cardDesktop: {
@@ -388,7 +384,7 @@ const s = StyleSheet.create({
     gap: 14,
     marginBottom: 20,
   },
-  logoBadge: {
+  logoSquare: {
     width: 44,
     height: 44,
     borderRadius: 12,
@@ -397,8 +393,8 @@ const s = StyleSheet.create({
     alignItems: 'center',
     shadowColor: '#00DFB2',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
     elevation: 5,
   },
   logoIcon: {
@@ -406,7 +402,7 @@ const s = StyleSheet.create({
   },
   brandTitle: {
     color: '#FFFFFF',
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: '800',
   },
   brandSubtitle: {
@@ -416,10 +412,10 @@ const s = StyleSheet.create({
     marginTop: 2,
   },
 
-  welcomeBox: {
+  welcomeWrap: {
     marginBottom: 20,
   },
-  welcomeHeading: {
+  welcomeTitle: {
     color: '#FFFFFF',
     fontSize: 24,
     fontWeight: '800',
@@ -448,7 +444,7 @@ const s = StyleSheet.create({
     width: 45,
   },
 
-  ctaButton: {
+  signInBtn: {
     backgroundColor: '#00DFB2',
     borderRadius: 14,
     paddingVertical: 16,
@@ -460,8 +456,8 @@ const s = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
-  ctaText: {
-    color: '#05131C',
+  signInText: {
+    color: '#051817',
     fontWeight: '800',
     fontSize: 16,
     letterSpacing: 0.3,
@@ -475,24 +471,24 @@ const s = StyleSheet.create({
     lineHeight: 18,
   },
 
-  dividerContainer: {
+  dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 18,
     gap: 14,
   },
-  dividerBar: {
+  dividerLine: {
     flex: 1,
     height: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
-  dividerLabel: {
+  dividerText: {
     color: '#64748B',
     fontSize: 13,
     fontWeight: '500',
   },
 
-  createAccountRow: {
+  createAccountBtn: {
     alignItems: 'center',
     paddingVertical: 4,
   },

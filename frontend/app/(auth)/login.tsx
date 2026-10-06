@@ -17,7 +17,44 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../hooks/useAuth';
 
-// ── Glass Input Field ────────────────────────────────────────────────────────
+// ── Icons (Clean SVG / Vector Style) ──────────────────────────────────────────
+function MailIcon({ color = '#8E9BAE' }: { color?: string }) {
+  return (
+    <View style={iconStyles.wrap}>
+      <Text style={[iconStyles.symbol, { color }]}>✉️</Text>
+    </View>
+  );
+}
+
+function LockIcon({ color = '#8E9BAE' }: { color?: string }) {
+  return (
+    <View style={iconStyles.wrap}>
+      <Text style={[iconStyles.symbol, { color }]}>🔒</Text>
+    </View>
+  );
+}
+
+function EyeIcon({ visible, color = '#8E9BAE' }: { visible: boolean; color?: string }) {
+  return (
+    <View style={iconStyles.wrap}>
+      <Text style={[iconStyles.symbol, { color }]}>{visible ? '👁️' : '🙈'}</Text>
+    </View>
+  );
+}
+
+const iconStyles = StyleSheet.create({
+  wrap: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  symbol: {
+    fontSize: 16,
+  },
+});
+
+// ── Glass Input Field Component ──────────────────────────────────────────────
 function GlassInput({
   label,
   placeholder,
@@ -35,7 +72,7 @@ function GlassInput({
   secureTextEntry?: boolean;
   keyboardType?: any;
   autoCapitalize?: any;
-  icon: string;
+  icon: 'mail' | 'lock';
 }) {
   const [focused, setFocused] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
@@ -44,7 +81,11 @@ function GlassInput({
     <View style={gi.wrap}>
       <Text style={gi.label}>{label}</Text>
       <View style={[gi.box, focused && gi.boxFocused]}>
-        <Text style={gi.icon}>{icon}</Text>
+        {icon === 'mail' ? (
+          <MailIcon color={focused ? '#00DFB2' : '#8E9BAE'} />
+        ) : (
+          <LockIcon color={focused ? '#00DFB2' : '#8E9BAE'} />
+        )}
         <TextInput
           style={[
             gi.input,
@@ -53,12 +94,13 @@ function GlassInput({
                   outline: 'none',
                   backgroundColor: 'transparent',
                   color: '#FFFFFF',
-                  WebkitBoxShadow: '0 0 0 1000px transparent inset',
+                  WebkitBoxShadow: '0 0 0 1000px rgba(12, 22, 36, 0.95) inset',
+                  WebkitTextFillColor: '#FFFFFF',
                 } as any)
               : null,
           ]}
           placeholder={placeholder}
-          placeholderTextColor="#5C6E82"
+          placeholderTextColor="#64748B"
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !showPwd}
@@ -74,7 +116,7 @@ function GlassInput({
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             activeOpacity={0.7}
           >
-            <Text style={gi.eyeIcon}>{showPwd ? '🙈' : '👁️'}</Text>
+            <EyeIcon visible={!showPwd} color={showPwd ? '#00DFB2' : '#8E9BAE'} />
           </TouchableOpacity>
         )}
       </View>
@@ -94,39 +136,41 @@ const gi = StyleSheet.create({
   box: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(15, 25, 42, 0.72)',
+    backgroundColor: 'rgba(12, 22, 36, 0.72)',
     borderRadius: 14,
     borderWidth: 1.2,
     borderColor: 'rgba(255, 255, 255, 0.12)',
     paddingHorizontal: 16,
-    height: 52,
+    height: 50,
     gap: 12,
   },
   boxFocused: {
     borderColor: '#00DFB2',
-    backgroundColor: 'rgba(18, 32, 54, 0.88)',
+    backgroundColor: 'rgba(14, 28, 46, 0.88)',
     shadowColor: '#00DFB2',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.45,
     shadowRadius: 10,
     elevation: 4,
   },
-  icon: { fontSize: 16, opacity: 0.9 },
   input: {
     flex: 1,
     color: '#FFFFFF',
     fontSize: 14.5,
-    backgroundColor: 'transparent',
+    fontWeight: '400',
     height: '100%',
-    padding: 0,
+    paddingVertical: 0,
   },
-  eyeBtn: { padding: 4 },
-  eyeIcon: { color: '#94A3B8', fontSize: 16 },
+  eyeBtn: {
+    padding: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
-// ── Main Screen Component ───────────────────────────────────────────────────
+// ── Main Login Screen ─────────────────────────────────────────────────────────
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('sharsha0333@gmail.com');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -135,7 +179,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
-  const isDesktop = width >= 900;
+  const isDesktop = width >= 920;
 
   const btnScale = useRef(new Animated.Value(1)).current;
   const pressIn = () => Animated.spring(btnScale, { toValue: 0.97, useNativeDriver: true }).start();
@@ -163,7 +207,7 @@ export default function LoginScreen() {
       style={s.bgImage}
       resizeMode="cover"
     >
-      {/* Dark overlay for optimal text contrast and neon ambience */}
+      {/* Subtle backdrop overlay to balance background artwork and focus on card */}
       <View style={s.darkBackdrop} />
 
       <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
@@ -178,25 +222,25 @@ export default function LoginScreen() {
             ]}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={[s.cardWrapper, isDesktop && s.cardWrapperDesktop]}>
-              {/* ── Center Glassmorphism Login Card ─────────────────────────── */}
+            <View style={[s.layoutWrapper, isDesktop && s.layoutWrapperDesktop]}>
+              {/* ── Center-Left Glassmorphism Card ─────────────────────────── */}
               <View
                 style={[
                   s.card,
                   isDesktop && s.cardDesktop,
                   Platform.OS === 'web'
                     ? ({
-                        backdropFilter: 'blur(28px) saturate(180%)',
-                        WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+                        backdropFilter: 'blur(32px) saturate(190%)',
+                        WebkitBackdropFilter: 'blur(32px) saturate(190%)',
                         boxShadow:
-                          '0 0 50px rgba(0, 223, 178, 0.16), 0 30px 60px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                          '0 0 50px rgba(0, 223, 178, 0.2), 0 25px 50px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.18)',
                       } as any)
                     : null,
                 ]}
               >
-                {/* Brand Header: Logo + Title */}
+                {/* Brand Header */}
                 <View style={s.brandRow}>
-                  <View style={s.logoBadge}>
+                  <View style={s.logoSquare}>
                     <Text style={s.logoIcon}>📖</Text>
                   </View>
                   <View>
@@ -205,9 +249,9 @@ export default function LoginScreen() {
                   </View>
                 </View>
 
-                {/* Welcome section */}
-                <View style={s.welcomeBox}>
-                  <Text style={s.welcomeHeading}>Welcome back 👋</Text>
+                {/* Welcome Heading */}
+                <View style={s.welcomeWrap}>
+                  <Text style={s.welcomeTitle}>Welcome back 👋</Text>
                   <Text style={s.welcomeSub}>Sign in to continue your learning journey</Text>
                 </View>
 
@@ -218,7 +262,7 @@ export default function LoginScreen() {
                   keyboardType="email-address"
                   value={email}
                   onChangeText={setEmail}
-                  icon="✉️"
+                  icon="mail"
                 />
 
                 {/* Password */}
@@ -228,20 +272,20 @@ export default function LoginScreen() {
                   secureTextEntry
                   value={password}
                   onChangeText={setPassword}
-                  icon="🔒"
+                  icon="lock"
                 />
 
-                {/* Remember Me + Forgot Password */}
-                <View style={s.metaRow}>
+                {/* Remember Me & Forgot Password */}
+                <View style={s.optionsRow}>
                   <TouchableOpacity
                     style={s.rememberRow}
                     onPress={() => setRememberMe(!rememberMe)}
                     activeOpacity={0.8}
                   >
                     <View style={[s.checkbox, rememberMe && s.checkboxChecked]}>
-                      {rememberMe && <Text style={s.checkmarkText}>✓</Text>}
+                      {rememberMe && <Text style={s.checkMark}>✓</Text>}
                     </View>
-                    <Text style={s.rememberLabel}>Remember me</Text>
+                    <Text style={s.rememberText}>Remember me</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -253,36 +297,36 @@ export default function LoginScreen() {
                     }
                     activeOpacity={0.7}
                   >
-                    <Text style={s.forgotLink}>Forgot password?</Text>
+                    <Text style={s.forgotText}>Forgot password?</Text>
                   </TouchableOpacity>
                 </View>
 
                 {/* Sign In CTA Button */}
                 <Animated.View style={{ transform: [{ scale: btnScale }] }}>
                   <TouchableOpacity
-                    style={[s.ctaButton, loading && { opacity: 0.75 }]}
+                    style={[s.signInBtn, loading && { opacity: 0.75 }]}
                     onPress={handleLogin}
                     onPressIn={pressIn}
                     onPressOut={pressOut}
                     disabled={loading}
                     activeOpacity={0.9}
                   >
-                    <Text style={s.ctaText}>
+                    <Text style={s.signInText}>
                       {loading ? 'Signing in...' : 'Sign In  →'}
                     </Text>
                   </TouchableOpacity>
                 </Animated.View>
 
                 {/* Divider */}
-                <View style={s.dividerContainer}>
-                  <View style={s.dividerBar} />
-                  <Text style={s.dividerLabel}>or</Text>
-                  <View style={s.dividerBar} />
+                <View style={s.dividerRow}>
+                  <View style={s.dividerLine} />
+                  <Text style={s.dividerText}>or</Text>
+                  <View style={s.dividerLine} />
                 </View>
 
                 {/* Create Account Link */}
                 <TouchableOpacity
-                  style={s.createAccountRow}
+                  style={s.createAccountBtn}
                   onPress={() => router.push('/(auth)/register')}
                   activeOpacity={0.7}
                 >
@@ -313,7 +357,7 @@ const s = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(6, 10, 16, 0.45)',
+    backgroundColor: 'rgba(4, 8, 14, 0.35)',
   },
   safe: {
     flex: 1,
@@ -329,32 +373,33 @@ const s = StyleSheet.create({
     paddingVertical: 48,
     paddingHorizontal: 64,
   },
-  cardWrapper: {
+
+  layoutWrapper: {
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardWrapperDesktop: {
+  layoutWrapperDesktop: {
     width: '100%',
-    maxWidth: 1200,
+    maxWidth: 1280,
     alignItems: 'flex-start',
-    paddingLeft: 60,
+    paddingLeft: 40,
   },
 
-  // Glassmorphism Center Card
+  // ── Glass Card ─────────────────────────────────────────────────────────────
   card: {
     width: '100%',
     maxWidth: 480,
-    backgroundColor: 'rgba(10, 20, 34, 0.65)',
-    borderRadius: 28,
-    borderWidth: 1.5,
-    borderColor: 'rgba(0, 229, 187, 0.35)',
+    backgroundColor: 'rgba(9, 18, 30, 0.65)',
+    borderRadius: 26,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 223, 178, 0.38)',
     paddingHorizontal: 32,
     paddingVertical: 36,
     shadowColor: '#00DFB2',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.25,
-    shadowRadius: 35,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.22,
+    shadowRadius: 36,
     elevation: 12,
   },
   cardDesktop: {
@@ -369,27 +414,27 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    marginBottom: 22,
+    marginBottom: 24,
   },
-  logoBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+  logoSquare: {
+    width: 46,
+    height: 46,
+    borderRadius: 13,
     backgroundColor: '#00DFB2',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#00DFB2',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
     elevation: 5,
   },
   logoIcon: {
-    fontSize: 24,
+    fontSize: 22,
   },
   brandTitle: {
     color: '#FFFFFF',
-    fontSize: 24,
+    fontSize: 23,
     fontWeight: '800',
     letterSpacing: -0.4,
   },
@@ -402,28 +447,28 @@ const s = StyleSheet.create({
   },
 
   // Welcome section
-  welcomeBox: {
-    marginBottom: 24,
+  welcomeWrap: {
+    marginBottom: 26,
   },
-  welcomeHeading: {
+  welcomeTitle: {
     color: '#FFFFFF',
-    fontSize: 27,
+    fontSize: 26,
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 6,
   },
   welcomeSub: {
     color: '#94A3B8',
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '400',
   },
 
   // Options row
-  metaRow: {
+  optionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 2,
     marginBottom: 24,
   },
   rememberRow: {
@@ -445,24 +490,24 @@ const s = StyleSheet.create({
     backgroundColor: '#00DFB2',
     borderColor: '#00DFB2',
   },
-  checkmarkText: {
-    color: '#05131C',
+  checkMark: {
+    color: '#051817',
     fontSize: 12,
     fontWeight: '900',
   },
-  rememberLabel: {
+  rememberText: {
     color: '#94A3B8',
     fontSize: 13,
     fontWeight: '500',
   },
-  forgotLink: {
+  forgotText: {
     color: '#00DFB2',
     fontSize: 13,
     fontWeight: '600',
   },
 
-  // CTA Button
-  ctaButton: {
+  // Sign In CTA
+  signInBtn: {
     backgroundColor: '#00DFB2',
     borderRadius: 14,
     paddingVertical: 16,
@@ -474,33 +519,33 @@ const s = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
-  ctaText: {
-    color: '#05131C',
+  signInText: {
+    color: '#051817',
     fontWeight: '800',
     fontSize: 16,
     letterSpacing: 0.3,
   },
 
   // Divider
-  dividerContainer: {
+  dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 22,
     gap: 14,
   },
-  dividerBar: {
+  dividerLine: {
     flex: 1,
     height: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
-  dividerLabel: {
+  dividerText: {
     color: '#64748B',
     fontSize: 13,
     fontWeight: '500',
   },
 
-  // Create account
-  createAccountRow: {
+  // Create Account
+  createAccountBtn: {
     alignItems: 'center',
     paddingVertical: 4,
   },
