@@ -19,7 +19,8 @@ from app.routers import (
     exams,
     assignments,
     planner,
-    progress
+    progress,
+    ai
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -74,6 +75,7 @@ app.include_router(exams.router, prefix=settings.API_V1_STR)
 app.include_router(assignments.router, prefix=settings.API_V1_STR)
 app.include_router(planner.router, prefix=settings.API_V1_STR)
 app.include_router(progress.router, prefix=settings.API_V1_STR)
+app.include_router(ai.router, prefix=settings.API_V1_STR)
 
 
 if __name__ == "__main__":

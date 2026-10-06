@@ -1,24 +1,28 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Modal, Alert, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { View, Text, StyleSheet, FlatList, Modal, Alert, TouchableOpacity, ScrollView } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SubjectService } from '../../services/subjects';
 import { TopicService } from '../../services/topics';
 import { ProgressService } from '../../services/progress';
+import { getSubjectAssessments } from '../../services/aiAssessment';
 import { Subject } from '../../types/subject';
 import { Topic } from '../../types/topic';
 import { SubjectProgress } from '../../types/progress';
+import { Assessment } from '../../types/assessment';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { ProgressBar } from '../../components/common/ProgressBar';
 
 export default function SubjectDetailScreen() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const subjectId = id || '1';
 
   const [subject, setSubject] = useState<Subject | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [progress, setProgress] = useState<SubjectProgress | null>(null);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Topic creation state
@@ -29,14 +33,18 @@ export default function SubjectDetailScreen() {
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [submitting, setSubmitting] = useState(false);
 
+  // Selected assessment modal state
+  const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
+
   const loadData = useCallback(async () => {
     if (!subjectId) return;
     try {
       setLoading(true);
-      const [subjData, topicData, progData] = await Promise.all([
+      const [subjData, topicData, progData, assessData] = await Promise.all([
         SubjectService.getById(subjectId).catch(() => null),
         TopicService.getBySubject(subjectId).catch(() => []),
         ProgressService.getSubjectProgress(subjectId).catch(() => null),
+        getSubjectAssessments(subjectId).catch(() => []),
       ]);
       if (subjData) {
         setSubject(subjData);
@@ -55,6 +63,9 @@ export default function SubjectDetailScreen() {
       }
       if (progData) {
         setProgress(progData);
+      }
+      if (Array.isArray(assessData)) {
+        setAssessments(assessData.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
       }
     } catch (err: any) {
       // Graceful fallback
@@ -99,7 +110,6 @@ export default function SubjectDetailScreen() {
 
   const handleToggleTopic = async (topic: Topic) => {
     try {
-      // Optimistic update
       setTopics((prev) =>
         prev.map((t) => (t.id === topic.id ? { ...t, completed: !t.completed } : t))
       );
@@ -118,8 +128,20 @@ export default function SubjectDetailScreen() {
     <View style={styles.container}>
       {subject && (
         <Card style={styles.headerCard}>
-          <Text style={styles.title}>{subject.name}</Text>
-          {subject.description ? <Text style={styles.desc}>{subject.description}</Text> : null}
+          <View style={styles.headerRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.title}>{subject.name}</Text>
+              {subject.description ? <Text style={styles.desc}>{subject.description}</Text> : null}
+            </View>
+            <TouchableOpacity
+              style={styles.voiceAssessmentBtn}
+              onPress={() => router.push(`/assessment/${subjectId}` as any)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.voiceBtnText}>🎙️ Voice Assessment</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={{ marginTop: 12 }}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressLabel}>Course Progress</Text>
@@ -128,6 +150,35 @@ export default function SubjectDetailScreen() {
             <ProgressBar progress={progressPct} />
           </View>
         </Card>
+      )}
+
+      {/* Previous Voice Assessments Section */}
+      {assessments.length > 0 && (
+        <View style={styles.assessmentSection}>
+          <Text style={styles.sectionTitle}>Previous Voice Assessments ({assessments.length})</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.assessScroll}>
+            {assessments.map((item) => {
+              const pred = item.prediction || {};
+              return (
+                <TouchableOpacity
+                  key={item.id || item.createdAt}
+                  style={styles.assessmentCard}
+                  onPress={() => setSelectedAssessment(item)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.assessDate}>
+                    {new Date(item.createdAt || Date.now()).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </Text>
+                  <Text style={styles.assessScore}>Readiness: {pred.readinessScore ?? 60}%</Text>
+                  <Text style={styles.assessRisk}>Risk: {(pred.riskLevel || 'Medium').toUpperCase()}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
       )}
 
       <View style={styles.topRow}>
@@ -171,6 +222,7 @@ export default function SubjectDetailScreen() {
         }
       />
 
+      {/* Add Topic Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -212,6 +264,55 @@ export default function SubjectDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* View Selected Previous Assessment Modal */}
+      <Modal visible={!!selectedAssessment} animationType="fade" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>📊 Assessment Details</Text>
+            {selectedAssessment && (
+              <ScrollView style={{ maxHeight: 380 }}>
+                <Text style={styles.assessDetailText}>
+                  Date: {new Date(selectedAssessment.createdAt || Date.now()).toLocaleString()}
+                </Text>
+                <Text style={styles.assessDetailText}>
+                  Readiness Score: {selectedAssessment.prediction?.readinessScore ?? 60}%
+                </Text>
+                <Text style={styles.assessDetailText}>
+                  Risk Level: {(selectedAssessment.prediction?.riskLevel || 'MEDIUM').toUpperCase()}
+                </Text>
+                <Text style={styles.assessDetailText}>
+                  Recommended Hours: {selectedAssessment.prediction?.estimatedStudyHoursPerDay ?? 2.0} hrs/day
+                </Text>
+
+                {selectedAssessment.prediction?.weakAreas && (
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={{ color: '#F87171', fontWeight: '700', fontSize: 13 }}>Weak Areas:</Text>
+                    {selectedAssessment.prediction.weakAreas.map((w: string, idx: number) => (
+                      <Text key={idx} style={{ color: '#E2E8F0', fontSize: 12, marginTop: 2 }}>• {w}</Text>
+                    ))}
+                  </View>
+                )}
+
+                {selectedAssessment.recommendations && (
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={{ color: '#38BDF8', fontWeight: '700', fontSize: 13 }}>Recommendations:</Text>
+                    {selectedAssessment.recommendations.map((r: string, idx: number) => (
+                      <Text key={idx} style={{ color: '#E2E8F0', fontSize: 12, marginTop: 2 }}>• {r}</Text>
+                    ))}
+                  </View>
+                )}
+              </ScrollView>
+            )}
+
+            <Button
+              title="Close"
+              onPress={() => setSelectedAssessment(null)}
+              style={{ marginTop: 16 }}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -227,6 +328,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
   title: {
     color: '#FFFFFF',
     fontSize: 22,
@@ -236,6 +343,17 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontSize: 14,
     marginVertical: 4,
+  },
+  voiceAssessmentBtn: {
+    backgroundColor: '#00C9A7',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  voiceBtnText: {
+    color: '#0B132B',
+    fontSize: 12,
+    fontWeight: '800',
   },
   progressHeader: {
     flexDirection: 'row',
@@ -251,6 +369,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+
+  // Assessment Section
+  assessmentSection: { marginBottom: 16 },
+  assessScroll: { marginTop: 8 },
+  assessmentCard: {
+    backgroundColor: '#1C2541',
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+    minWidth: 130,
+  },
+  assessDate: { color: '#94A3B8', fontSize: 11, fontWeight: '600' },
+  assessScore: { color: '#00C9A7', fontSize: 13, fontWeight: '700', marginTop: 4 },
+  assessRisk: { color: '#F87171', fontSize: 11, fontWeight: '600', marginTop: 2 },
+  assessDetailText: { color: '#FFFFFF', fontSize: 14, marginTop: 4 },
+
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

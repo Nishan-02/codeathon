@@ -685,3 +685,9 @@ export const getAssessments = async (): Promise<Assessment[]> => {
   });
   return list;
 };
+
+export const getSubjectAssessments = async (subjectId: string | number): Promise<Assessment[]> => {
+  const all = await getAssessments();
+  const targetStr = String(subjectId);
+  return all.filter((a) => String(a.subjectId || a.subject_id) === targetStr);
+};
