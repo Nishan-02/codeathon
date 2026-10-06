@@ -1,8 +1,15 @@
-import * as Speech from 'expo-speech';
 import { Platform } from 'react-native';
 import { CONFIG } from '../constants/config';
 import { saveAssessment, getSubjectAssessments } from '../lib/firebase/firestore';
 import { Assessment } from '../types/assessment';
+
+// Safe dynamic Speech helper
+let NativeSpeech: any = null;
+try {
+  NativeSpeech = require('expo-speech');
+} catch {
+  NativeSpeech = null;
+}
 
 export interface AnswerPayload {
   questionId: string;
@@ -23,26 +30,30 @@ export interface PredictionResult {
 // ── Text To Speech Helper ──────────────────────────────────────────────────
 export const speakQuestion = (text: string, onDone?: () => void) => {
   try {
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && (window as any).speechSynthesis) {
+      (window as any).speechSynthesis.cancel();
+      const utterance = new (window as any).SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
       if (onDone) utterance.onend = onDone;
-      window.speechSynthesis.speak(utterance);
+      (window as any).speechSynthesis.speak(utterance);
       return;
     }
 
-    Speech.stop();
-    Speech.speak(text, {
-      language: 'en',
-      rate: 1.0,
-      pitch: 1.0,
-      onDone,
-      onError: () => {
-        if (onDone) onDone();
-      },
-    });
+    if (NativeSpeech && NativeSpeech.speak) {
+      NativeSpeech.stop();
+      NativeSpeech.speak(text, {
+        language: 'en',
+        rate: 1.0,
+        pitch: 1.0,
+        onDone,
+        onError: () => {
+          if (onDone) onDone();
+        },
+      });
+    } else {
+      if (onDone) onDone();
+    }
   } catch (err) {
     if (onDone) onDone();
   }
@@ -50,10 +61,12 @@ export const speakQuestion = (text: string, onDone?: () => void) => {
 
 export const stopSpeaking = () => {
   try {
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && (window as any).speechSynthesis) {
+      (window as any).speechSynthesis.cancel();
     }
-    Speech.stop();
+    if (NativeSpeech && NativeSpeech.stop) {
+      NativeSpeech.stop();
+    }
   } catch {
     // ignore
   }
