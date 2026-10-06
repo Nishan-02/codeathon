@@ -106,6 +106,18 @@ function GlassInput({
           secureTextEntry={secureTextEntry && !showPwd}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize ?? 'none'}
+          autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
+          spellCheck={false}
+          {...(Platform.OS === 'web'
+            ? ({
+                autoComplete: 'new-password',
+                'data-lpignore': 'true',
+                'data-1p-ignore': 'true',
+                'data-form-type': 'other',
+              } as any)
+            : {})}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
         />
@@ -170,7 +182,7 @@ const gi = StyleSheet.create({
 
 // ── Main Login Screen ─────────────────────────────────────────────────────────
 export default function LoginScreen() {
-  const [email, setEmail] = useState('sharsha0333@gmail.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -251,7 +263,7 @@ export default function LoginScreen() {
 
                 {/* Welcome Heading */}
                 <View style={s.welcomeWrap}>
-                  <Text style={s.welcomeTitle}>Welcome back </Text>
+                  <Text style={s.welcomeTitle}>Welcome back 👋</Text>
                   <Text style={s.welcomeSub}>Sign in to continue your learning journey</Text>
                 </View>
 

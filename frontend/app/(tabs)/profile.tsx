@@ -134,9 +134,9 @@ export default function ProfileScreen() {
             <Text style={s.avatarInitials}>{initials}</Text>
           </View>
           <Text style={s.userName}>
-            {user?.displayName || user?.email?.split('@')[0] || 'Sharsha'}
+            {user?.displayName || user?.email?.split('@')[0] || 'Student'}
           </Text>
-          <Text style={s.userEmail}>{user?.email || 'sharsha0333@gmail.com'}</Text>
+          <Text style={s.userEmail}>{user?.email || 'student@studyflow.ai'}</Text>
           <View style={s.chipRow}>
             <View style={s.chip}>
               <View style={s.chipDot} />
@@ -160,8 +160,8 @@ export default function ProfileScreen() {
         {/* ── Account info ── */}
         <View style={s.card}>
           <Text style={s.cardTitle}>Account Details</Text>
-          <InfoRow icon="✉️" label="Email" value={user?.email || 'sharsha0333@gmail.com'} />
-          <InfoRow icon="🆔" label="User ID" value={user?.uid?.slice(0, 18) || 'usr_8923049102'} />
+          <InfoRow icon="✉️" label="Email" value={user?.email || 'student@studyflow.ai'} />
+          <InfoRow icon="🆔" label="User ID" value={user?.uid?.slice(0, 18) || 'usr_active_student'} />
           <InfoRow icon="📅" label="Member since" value={memberSince} />
           <InfoRow
             icon="✅"

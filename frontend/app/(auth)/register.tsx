@@ -64,6 +64,18 @@ function GlassInput({
           secureTextEntry={secureTextEntry && !showPwd}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize ?? 'none'}
+          autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
+          spellCheck={false}
+          {...(Platform.OS === 'web'
+            ? ({
+                autoComplete: 'new-password',
+                'data-lpignore': 'true',
+                'data-1p-ignore': 'true',
+                'data-form-type': 'other',
+              } as any)
+            : {})}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
         />
@@ -205,7 +217,7 @@ export default function RegisterScreen() {
                 </View>
 
                 <View style={s.welcomeWrap}>
-                  <Text style={s.welcomeTitle}>Create Account </Text>
+                  <Text style={s.welcomeTitle}>Create Account</Text>
                   <Text style={s.welcomeSub}>Start your AI-powered study journey today</Text>
                 </View>
 
