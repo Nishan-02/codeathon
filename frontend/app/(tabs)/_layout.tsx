@@ -65,6 +65,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="docuquery"
+        options={{
+          title: 'DocuQuery AI',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📑" label="DocuQuery AI" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="calendar"
         options={{
           title: 'Calendar',
