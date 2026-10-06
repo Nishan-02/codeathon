@@ -20,7 +20,142 @@ import {
   AskQuestionResponse,
   StudyModule,
   QuizQuestion,
+  GeneratedFileAsset,
 } from '../../types/rag';
+
+// ── Clean Text & Markdown Display Formatter ─────────────────────────────────
+function cleanDisplayString(input: string): string {
+  if (!input) return '';
+  let str = input;
+
+  // Unescape backslashed quotes and slashes
+  str = str.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\\\/g, '').replace(/\\/g, '');
+
+  // Convert curly/smart quotes & inverted commas
+  str = str.replace(/[“”″«»]/g, '"').replace(/[‘’′`]/g, "'");
+
+  // Remove quotes sandwiched inside words (e.g. w"or"d -> word)
+  str = str.replace(/([a-zA-Z])["']([a-zA-Z])/g, '$1$2');
+
+  // Normalize multiple spaces
+  str = str.replace(/[ \t]+/g, ' ');
+
+  return str.trim();
+}
+
+function FormattedMarkdownText({
+  content,
+  baseStyle,
+}: {
+  content: string;
+  baseStyle?: any;
+}) {
+  if (!content) return null;
+
+  const cleanedContent = cleanDisplayString(content);
+  const lines = cleanedContent.split('\n');
+
+  return (
+    <View style={{ gap: 6 }}>
+      {lines.map((rawLine, idx) => {
+        let line = rawLine.trim();
+        if (!line) return null;
+
+        // Header (### or ## or #)
+        if (line.startsWith('#')) {
+          const headerText = cleanDisplayString(line.replace(/^#+\s*/, ''));
+          return (
+            <Text
+              key={idx}
+              style={[
+                {
+                  fontSize: 16,
+                  fontWeight: '800',
+                  color: Colors.teal,
+                  marginTop: 6,
+                  marginBottom: 2,
+                },
+                baseStyle,
+              ]}
+            >
+              {headerText}
+            </Text>
+          );
+        }
+
+        // Blockquote (> )
+        if (line.startsWith('>')) {
+          const quoteText = cleanDisplayString(line.replace(/^>\s*/, ''));
+          return (
+            <View
+              key={idx}
+              style={{
+                borderLeftWidth: 3,
+                borderLeftColor: Colors.teal,
+                backgroundColor: '#0F2A2255',
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 4,
+                marginVertical: 4,
+              }}
+            >
+              <Text
+                style={[
+                  {
+                    fontSize: 13,
+                    fontStyle: 'italic',
+                    color: Colors.textSecondary,
+                    lineHeight: 18,
+                  },
+                  baseStyle,
+                ]}
+              >
+                "{quoteText}"
+              </Text>
+            </View>
+          );
+        }
+
+        // Bullet point (1. or - or *)
+        const isBullet = /^(?:\d+\.|\-|\*)\s+/.test(line);
+        let bulletContent = line;
+        if (isBullet) {
+          bulletContent = line.replace(/^(?:\d+\.|\-|\*)\s+/, '');
+        }
+
+        // Inline Bold formatting (**text**)
+        const parts = bulletContent.split(/(\*\*[^*]+\*\*)/g);
+
+        return (
+          <Text
+            key={idx}
+            style={[
+              {
+                fontSize: 14,
+                color: Colors.textSecondary,
+                lineHeight: 20,
+              },
+              baseStyle,
+            ]}
+          >
+            {isBullet && <Text style={{ color: Colors.teal, fontWeight: '700' }}>• </Text>}
+            {parts.map((part, pIdx) => {
+              if (part.startsWith('**') && part.endsWith('**')) {
+                const boldText = cleanDisplayString(part.slice(2, -2));
+                return (
+                  <Text key={pIdx} style={{ fontWeight: '700', color: Colors.textPrimary }}>
+                    {boldText}
+                  </Text>
+                );
+              }
+              return cleanDisplayString(part);
+            })}
+          </Text>
+        );
+      })}
+    </View>
+  );
+}
 
 export default function DocuQueryScreen() {
   const router = useRouter();
@@ -67,6 +202,11 @@ export default function DocuQueryScreen() {
   // Collapsible modules
   const [expandedWeeks, setExpandedWeeks] = useState<Record<number, boolean>>({ 1: true });
 
+  // Generated PDF study files & assets
+  const [generatedFiles, setGeneratedFiles] = useState<GeneratedFileAsset[]>([]);
+  const [isGeneratingFiles, setIsGeneratingFiles] = useState<boolean>(false);
+  const [activePreviewFile, setActivePreviewFile] = useState<GeneratedFileAsset | null>(null);
+
   // ── Check if document already loaded on mount ───────────────────────────────
   useEffect(() => {
     RAGService.getStatus()
@@ -74,10 +214,55 @@ export default function DocuQueryScreen() {
         if (status.has_document && status.document_id) {
           setActiveDocId(status.document_id);
           setActiveFilename(status.filename || 'Document');
+          handleGenerateFiles(status.document_id);
         }
       })
       .catch(() => {});
   }, []);
+
+  const handleGenerateFiles = async (docId?: string) => {
+    try {
+      setIsGeneratingFiles(true);
+      const bundle = await RAGService.generateStudyFiles(docId || activeDocId || undefined);
+      if (bundle && bundle.files) {
+        setGeneratedFiles(bundle.files);
+      }
+    } catch (err: any) {
+      console.warn('File generation notice:', err);
+    } finally {
+      setIsGeneratingFiles(false);
+    }
+  };
+
+  const handleDownloadFile = (file: GeneratedFileAsset) => {
+    if (Platform.OS === 'web') {
+      const blob = new Blob([file.content], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const safeTitle = (file.title || 'study_asset').replace(/[^a-zA-Z0-9_-]/g, '_');
+      link.setAttribute('download', `${safeTitle}.${file.extension}`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      setActivePreviewFile(file);
+      alertMsg(`File "${file.title}" is ready! Select and copy the text in preview.`);
+    }
+  };
+
+  const handleDownloadAllFiles = () => {
+    if (!generatedFiles || generatedFiles.length === 0) {
+      handleGenerateFiles();
+      return;
+    }
+    generatedFiles.forEach((file, index) => {
+      setTimeout(() => {
+        handleDownloadFile(file);
+      }, index * 300);
+    });
+  };
+
 
   // ── File Handlers ──────────────────────────────────────────────────────────
   const handleFileChange = (e: any) => {
@@ -142,8 +327,9 @@ export default function DocuQueryScreen() {
       setStudyPlan(response.study_plan);
       setSyncSuccessMsg(null);
 
-      // Pre-expand first module
+      // Pre-expand first module & generate study files
       setExpandedWeeks({ 1: true });
+      handleGenerateFiles(response.document_id);
     } catch (err: any) {
       alertMsg(err.message || 'Error processing document.');
     } finally {
@@ -163,6 +349,7 @@ export default function DocuQueryScreen() {
       setStudyPlan(response.study_plan);
       setSyncSuccessMsg(null);
       setExpandedWeeks({ 1: true });
+      handleGenerateFiles(response.document_id);
     } catch (err: any) {
       alertMsg(err.message || 'Could not load sample document.');
     } finally {
@@ -483,8 +670,8 @@ export default function DocuQueryScreen() {
                     </Text>
                   </View>
                 </View>
-                <Text style={s.planTitle}>{studyPlan.title}</Text>
-                <Text style={s.planSummary}>{studyPlan.summary}</Text>
+                <Text style={s.planTitle}>{cleanDisplayString(studyPlan.title)}</Text>
+                <FormattedMarkdownText content={studyPlan.summary} baseStyle={s.planSummary} />
               </View>
             </View>
 
@@ -557,6 +744,97 @@ export default function DocuQueryScreen() {
                 ))}
               </View>
             )}
+
+            {/* 📁 GENERATED PDF STUDY FILES & ASSETS SECTION */}
+            <View style={{ marginTop: 20, marginBottom: 20, padding: 16, backgroundColor: '#0D1527', borderRadius: 16, borderWidth: 1, borderColor: '#1F2E4D' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={{ fontSize: 18, fontWeight: '800', color: '#FFFFFF' }}>📁 Generated PDF Study Files</Text>
+                  <Text style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>
+                    Download or export structured materials synthesized directly from {activeFilename || 'uploaded PDF'}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={{ backgroundColor: '#2563EB', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                  onPress={handleDownloadAllFiles}
+                  disabled={isGeneratingFiles}
+                >
+                  <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>📦 Download All</Text>
+                </TouchableOpacity>
+              </View>
+
+              {isGeneratingFiles ? (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <ActivityIndicator color="#6366F1" size="small" />
+                  <Text style={{ color: '#94A3B8', fontSize: 13, marginTop: 8 }}>Synthesizing Flashcards, Notes, Glossary, Mindmap & Exam files...</Text>
+                </View>
+              ) : generatedFiles.length === 0 ? (
+                <TouchableOpacity
+                  style={{ padding: 16, borderRadius: 12, backgroundColor: '#162238', alignItems: 'center', borderWidth: 1, borderColor: '#263757', borderStyle: 'dashed' }}
+                  onPress={() => handleGenerateFiles()}
+                >
+                  <Text style={{ color: '#818CF8', fontWeight: '700', fontSize: 14 }}>✨ Click to Generate All 5 PDF Study Files</Text>
+                  <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 4 }}>Generates Flashcards, Notes, Glossary, Mindmap, and Practice Exam</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={{ gap: 12 }}>
+                  {generatedFiles.map((file) => {
+                    const icons: Record<string, string> = {
+                      flashcards: '🎴',
+                      notes: '📝',
+                      glossary: '📖',
+                      mindmap: '🧠',
+                      exam: '🎯',
+                    };
+                    const icon = icons[file.file_type] || '📄';
+                    const isPreviewing = activePreviewFile?.file_id === file.file_id;
+
+                    return (
+                      <View key={file.file_id} style={{ backgroundColor: '#131F33', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#233454' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                            <Text style={{ fontSize: 24 }}>{icon}</Text>
+                            <View style={{ flex: 1 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Text style={{ fontSize: 15, fontWeight: '700', color: '#F8FAFC' }}>{file.title}</Text>
+                                <View style={{ backgroundColor: '#1E293B', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#38BDF8' }}>.{file.extension.toUpperCase()}</Text>
+                                </View>
+                              </View>
+                              <Text style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }} numberOfLines={2}>{file.summary}</Text>
+                            </View>
+                          </View>
+                          <View style={{ flexDirection: 'row', gap: 8, marginLeft: 8 }}>
+                            <TouchableOpacity
+                              style={{ backgroundColor: '#1E293B', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#334155' }}
+                              onPress={() => setActivePreviewFile(isPreviewing ? null : file)}
+                            >
+                              <Text style={{ color: '#CBD5E1', fontSize: 12, fontWeight: '600' }}>{isPreviewing ? 'Close' : '👁️ Preview'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={{ backgroundColor: '#059669', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 }}
+                              onPress={() => handleDownloadFile(file)}
+                            >
+                              <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>📥 Export</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+
+                        {/* Inline Preview Content */}
+                        {isPreviewing && (
+                          <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#233454', backgroundColor: '#0A111E', padding: 12, borderRadius: 8, maxHeight: 220 }}>
+                            <ScrollView style={{ maxHeight: 200 }}>
+                              <FormattedMarkdownText content={file.content} baseStyle={{ fontSize: 12, color: '#CBD5E1' }} />
+                            </ScrollView>
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+
 
             {/* Modules Roadmap */}
             <Text style={s.modulesHeading}>Weekly Roadmap & Focus Modules</Text>
@@ -761,7 +1039,7 @@ export default function DocuQueryScreen() {
                 <View style={s.aiResponseRow}>
                   <Text style={s.aiIcon}>🤖</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={s.aiAnswerText}>{item.answer}</Text>
+                    <FormattedMarkdownText content={item.answer} baseStyle={s.aiAnswerText} />
 
                     {/* Retrieved Context Chunks (DocuQuery AI citations) */}
                     {item.chunks && item.chunks.length > 0 && (
@@ -802,7 +1080,7 @@ export default function DocuQueryScreen() {
                                 style={s.chunkSnippet}
                                 numberOfLines={isChunkExpanded ? undefined : 3}
                               >
-                                "{chunk.text.trim()}"
+                                "{cleanDisplayString(chunk.text)}"
                               </Text>
                             </View>
                           );

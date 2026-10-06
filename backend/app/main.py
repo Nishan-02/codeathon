@@ -15,6 +15,7 @@ from app.routers import (
     assignments,
     planner,
     progress,
+    rag,
 )
 from app.core.core_tracker import router as core_tracker_router
 
@@ -46,13 +47,15 @@ app.include_router(exams.router, prefix="/api")
 app.include_router(assignments.router, prefix="/api")
 app.include_router(planner.router, prefix="/api")
 app.include_router(progress.router, prefix="/api")
+app.include_router(rag.router, prefix="/api")
 
 # Core tracker and ML routes (already prefixed with /api)
 app.include_router(core_tracker_router)
 
-# Also mount progress and topics directly
+# Also mount progress, topics, and rag directly
 app.include_router(topics.router)
 app.include_router(progress.router)
+app.include_router(rag.router)
 
 
 @app.get("/health", tags=["Health"])
