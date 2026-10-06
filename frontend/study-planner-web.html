@@ -467,7 +467,72 @@ const COLORS=['#6366f1','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#8b5c
 const EMOJIS=['📐','🔬','💻','📜','🌍','⚗️','🎨','📊'];
 let db={subjects:[],topics:{},exams:[],assignments:[],schedule:[],selectedSubjectId:null,currentMonth:new Date().getMonth(),currentYear:new Date().getFullYear(),selectedDiff:'medium',selectedTopicDiff:'medium',selectedExamSubject:null,selectedAssignSubject:null,plannerView:'week',examFilter:'upcoming',assignFilter:'pending'};
 
-function load(){try{const s=localStorage.getItem('sf_data');if(s){const p=JSON.parse(s);db.subjects=p.subjects||[];db.topics=p.topics||{};db.exams=p.exams||[];db.assignments=p.assignments||[];db.schedule=p.schedule||[];}}catch(e){}}
+function seedDefaultData(){
+  const s1 = { id: 1, name: 'Data Structures & Algorithms', description: 'Trees, Graphs, Sorting & Complexity', difficulty: 'hard', color: '#6366f1', emoji: '💻', createdAt: new Date().toISOString() };
+  const s2 = { id: 2, name: 'Database Management Systems', description: 'SQL Joins, Normalization & Indexing', difficulty: 'medium', color: '#06b6d4', emoji: '🗄️', createdAt: new Date().toISOString() };
+  const s3 = { id: 3, name: 'Operating Systems', description: 'Process Scheduling, Memory & Deadlocks', difficulty: 'medium', color: '#10b981', emoji: '⚙️', createdAt: new Date().toISOString() };
+  const s4 = { id: 4, name: 'Computer Networks', description: 'TCP/IP, Routing & Application Layer', difficulty: 'easy', color: '#f59e0b', emoji: '🌐', createdAt: new Date().toISOString() };
+  db.subjects = [s1, s2, s3, s4];
+  db.topics = {
+    1: [
+      { id: 11, name: 'Binary Search Trees & AVL', description: 'Balanced search tree properties', estimated_hours: 2, difficulty: 'medium', completed: true },
+      { id: 12, name: 'Graph BFS & Dijkstra Algorithm', description: 'Shortest path traversals', estimated_hours: 2.5, difficulty: 'hard', completed: false },
+      { id: 13, name: 'Dynamic Programming - Knapsack', description: '0/1 memoization table', estimated_hours: 3, difficulty: 'hard', completed: false },
+    ],
+    2: [
+      { id: 21, name: 'SQL Complex Joins & Subqueries', description: 'INNER, LEFT, FULL outer joins', estimated_hours: 1.5, difficulty: 'medium', completed: true },
+      { id: 22, name: 'B+ Tree Indexing & Hash Indices', description: 'Query performance optimization', estimated_hours: 2, difficulty: 'hard', completed: false },
+      { id: 23, name: 'ACID Properties & Transactions', description: 'Concurrency control & 2PL', estimated_hours: 1.5, difficulty: 'easy', completed: true },
+    ],
+    3: [
+      { id: 31, name: 'CPU Scheduling (Round Robin & SJF)', description: 'Turnaround & wait time metrics', estimated_hours: 2, difficulty: 'medium', completed: false },
+      { id: 32, name: 'Virtual Memory & Page Replacement', description: 'LRU, FIFO & Clock algorithms', estimated_hours: 2, difficulty: 'medium', completed: false },
+    ],
+    4: [
+      { id: 41, name: 'TCP 3-Way Handshake & Flow Control', description: 'Sliding window protocol', estimated_hours: 1.5, difficulty: 'easy', completed: true },
+      { id: 42, name: 'DNS & HTTP/HTTPS Protocols', description: 'TLS handshake & caching', estimated_hours: 1, difficulty: 'easy', completed: true },
+    ]
+  };
+  const nextWeek = new Date(Date.now() + 9 * 86400000).toISOString().split('T')[0];
+  const nextMonthDate = new Date(Date.now() + 20 * 86400000).toISOString().split('T')[0];
+  const dueSoon = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
+  const dueLater = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+
+  db.exams = [
+    { id: 101, title: 'DBMS Midterm Examination', date: nextWeek, subjectName: 'Database Management Systems', subjectColor: '#06b6d4' },
+    { id: 102, title: 'Algorithms End-Semester', date: nextMonthDate, subjectName: 'Data Structures & Algorithms', subjectColor: '#6366f1' },
+  ];
+  db.assignments = [
+    { id: 201, title: 'SQL Joins Problem Set #4', date: dueSoon, subjectName: 'Database Management Systems', subjectColor: '#06b6d4', completed: false },
+    { id: 202, title: 'CPU Scheduling Simulator Project', date: dueLater, subjectName: 'Operating Systems', subjectColor: '#10b981', completed: false },
+    { id: 203, title: 'Socket Programming Lab Exercise', date: nextWeek, subjectName: 'Computer Networks', subjectColor: '#f59e0b', completed: true },
+  ];
+  db.schedule = [
+    { id: 301, subjectName: 'Data Structures & Algorithms', topicName: 'Binary Search Trees', day: 'Mon', hours: 1.5, completed: true, color: '#6366f1' },
+    { id: 302, subjectName: 'Database Management Systems', topicName: 'SQL Joins & Indexing', day: 'Mon', hours: 1.25, completed: false, color: '#06b6d4' },
+    { id: 303, subjectName: 'Operating Systems', topicName: 'CPU Scheduling', day: 'Mon', hours: 1.75, completed: false, color: '#10b981' },
+    { id: 304, subjectName: 'Computer Networks', topicName: 'Revision & Recall', day: 'Tue', hours: 1.0, completed: false, color: '#f59e0b' },
+    { id: 305, subjectName: 'Data Structures & Algorithms', topicName: 'Graph BFS & Dijkstra', day: 'Wed', hours: 2.0, completed: false, color: '#6366f1' },
+  ];
+  save();
+}
+
+function load(){
+  try{
+    const s=localStorage.getItem('sf_data');
+    if(s){
+      const p=JSON.parse(s);
+      db.subjects=p.subjects||[];
+      db.topics=p.topics||{};
+      db.exams=p.exams||[];
+      db.assignments=p.assignments||[];
+      db.schedule=p.schedule||[];
+    }
+  }catch(e){}
+  if(!db.subjects || db.subjects.length === 0){
+    seedDefaultData();
+  }
+}
 function save(){try{localStorage.setItem('sf_data',JSON.stringify({subjects:db.subjects,topics:db.topics,exams:db.exams,assignments:db.assignments,schedule:db.schedule}));}catch(e){}}
 
 function navigate(page,subjectId=null){

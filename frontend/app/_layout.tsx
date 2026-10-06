@@ -17,9 +17,11 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (!user && !inAuthGroup) {
+    if (!user && !inAuthGroup && segments[0] === '(tabs)') {
+      // Redirect unauthenticated user trying to access tabs back to login
       router.replace('/(auth)/login');
     } else if (user && inAuthGroup) {
+      // Redirect logged-in user away from auth screens back to tabs
       router.replace('/(tabs)');
     }
   }, [user, loading, segments]);
@@ -90,4 +92,9 @@ const styles = StyleSheet.create({
   logoIcon: { fontSize: 36 },
   appName: { color: Colors.textPrimary, fontSize: 26, fontWeight: '800' },
   tagline: { color: Colors.teal, fontSize: 14, fontWeight: '600', marginTop: 4 },
+  loadingText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    marginTop: 12,
+  },
 });

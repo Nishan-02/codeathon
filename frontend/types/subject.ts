@@ -1,10 +1,11 @@
 export interface Subject {
   id: number;
-  user_id: number;
+  user_id?: number;
   name: string;
   description?: string | null;
   difficulty: 'easy' | 'medium' | 'hard';
-  created_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreateSubjectInput {
