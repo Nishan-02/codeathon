@@ -11,12 +11,24 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../constants/theme';
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
 import { ExamService } from '../../services/exams';
 import { AssignmentService } from '../../services/assignments';
+import { PlannerService } from '../../services/planner';
 import { Exam } from '../../types/exam';
 import { Assignment } from '../../types/assignment';
+import { StudySchedule } from '../../types/planner';
+
+export interface AttentionItem {
+  id: string | number;
+  type: 'exam' | 'assignment' | 'task';
+  title: string;
+  subject: string;
+  daysLeft: number;
+  formattedDate: string;
+  urgency: 'critical' | 'urgent' | 'upcoming';
+  categoryLabel: string;
+}
 
 // ── Mobile Top Navigation Bar ────────────────────────────────────────────────
 function MobileTopNavBar(props: BottomTabHeaderProps) {
@@ -24,83 +36,149 @@ function MobileTopNavBar(props: BottomTabHeaderProps) {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 860;
 
-  // Upcoming Deadlines State (Exams & Assignments)
-  const [deadlines, setDeadlines] = useState<
-    Array<{
-      id: string | number;
-      type: 'exam' | 'assignment';
-      title: string;
-      daysLeft: number;
-      formattedDate: string;
-    }>
-  >([
+  // Attention & Urgent Deadlines (Exams, Assignments, Study Tasks)
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'exam' | 'assignment' | 'task'>('all');
+  const [isSectionCollapsed, setIsSectionCollapsed] = useState(false);
+  const [attentionItems, setAttentionItems] = useState<AttentionItem[]>([
     {
-      id: 'default-1',
+      id: 'crit-task-1',
+      type: 'task',
+      title: 'Complete B-Tree Indexing & Query Optimizations',
+      subject: 'Database Systems',
+      daysLeft: 0,
+      formattedDate: 'Today',
+      urgency: 'critical',
+      categoryLabel: 'TASK DUE TODAY',
+    },
+    {
+      id: 'crit-asg-1',
+      type: 'assignment',
+      title: 'OS Kernel Synchronization & Lock Lab',
+      subject: 'Operating Systems',
+      daysLeft: 1,
+      formattedDate: 'Oct 07',
+      urgency: 'critical',
+      categoryLabel: 'ASSIGNMENT DUE TOMORROW',
+    },
+    {
+      id: 'urg-task-2',
+      type: 'task',
+      title: 'Backprop & Gradient Descent Calculus Review',
+      subject: 'Machine Learning',
+      daysLeft: 2,
+      formattedDate: 'Oct 08',
+      urgency: 'urgent',
+      categoryLabel: 'PRIORITY STUDY BLOCK',
+    },
+    {
+      id: 'urg-exam-1',
       type: 'exam',
-      title: 'Database Management Midterm',
+      title: 'Database Management Systems Midterm',
+      subject: 'Database Systems',
       daysLeft: 3,
       formattedDate: 'Oct 09',
+      urgency: 'urgent',
+      categoryLabel: 'MIDTERM EXAM',
     },
     {
-      id: 'default-2',
+      id: 'urg-asg-2',
       type: 'assignment',
-      title: 'Operating Systems Lab Assignment',
-      daysLeft: 5,
-      formattedDate: 'Oct 11',
+      title: 'Distributed Systems MapReduce Project',
+      subject: 'Distributed Systems',
+      daysLeft: 4,
+      formattedDate: 'Oct 10',
+      urgency: 'urgent',
+      categoryLabel: 'COURSEWORK LAB',
+    },
+    {
+      id: 'up-exam-2',
+      type: 'exam',
+      title: 'Machine Learning Model Assessment',
+      subject: 'Machine Learning',
+      daysLeft: 7,
+      formattedDate: 'Oct 13',
+      urgency: 'upcoming',
+      categoryLabel: 'SEMESTER EXAM',
     },
   ]);
-  const [activeDeadlineIdx, setActiveDeadlineIdx] = useState(0);
 
   useEffect(() => {
     Promise.all([
       ExamService.getAll().catch(() => [] as Exam[]),
       AssignmentService.getAll().catch(() => [] as Assignment[]),
-    ]).then(([exams, assignments]) => {
-      const list: Array<{
-        id: string | number;
-        type: 'exam' | 'assignment';
-        title: string;
-        daysLeft: number;
-        formattedDate: string;
-      }> = [];
-
+      PlannerService.getSchedule().catch(() => [] as StudySchedule[]),
+    ]).then(([exams, assignments, schedules]) => {
+      const list: AttentionItem[] = [];
       const now = Date.now();
 
+      // 1. Process Exams
       exams.forEach((ex) => {
         if (ex.exam_date) {
           const d = new Date(ex.exam_date).getTime();
           const days = Math.ceil((d - now) / 86400000);
-          if (days >= 0) {
+          if (days >= 0 && days <= 14) {
             list.push({
               id: ex.id || `exam-${ex.exam_date}`,
               type: 'exam',
-              title: `${ex.subject_name || 'Exam'} Midterm`,
+              title: `${ex.subject_name || 'Subject'} Exam Assessment`,
+              subject: ex.subject_name || 'Core Exam',
               daysLeft: days,
               formattedDate: new Date(ex.exam_date).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
               }),
+              urgency: days <= 1 ? 'critical' : days <= 3 ? 'urgent' : 'upcoming',
+              categoryLabel: days === 0 ? '🚨 EXAM TODAY' : days === 1 ? '⚡ EXAM TOMORROW' : '📅 EXAM DEADLINE',
             });
           }
         }
       });
 
+      // 2. Process Pending Assignments
       assignments
         .filter((a) => !a.completed)
         .forEach((asg) => {
           if (asg.due_date) {
             const d = new Date(asg.due_date).getTime();
             const days = Math.ceil((d - now) / 86400000);
-            if (days >= 0) {
+            if (days >= 0 && days <= 14) {
               list.push({
                 id: asg.id || `asg-${asg.due_date}`,
                 type: 'assignment',
                 title: asg.title || 'Course Assignment',
+                subject: asg.subject_name || 'Coursework',
                 daysLeft: days,
                 formattedDate: new Date(asg.due_date).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                 }),
+                urgency: days <= 1 ? 'critical' : days <= 3 ? 'urgent' : 'upcoming',
+                categoryLabel: days === 0 ? '🚨 DUE TODAY' : days === 1 ? '🚨 DUE TOMORROW' : '📝 ASSIGNMENT DUE',
+              });
+            }
+          }
+        });
+
+      // 3. Process Pending Study Tasks
+      schedules
+        .filter((s) => !s.completed)
+        .forEach((sch) => {
+          if (sch.scheduled_date) {
+            const d = new Date(sch.scheduled_date).getTime();
+            const days = Math.ceil((d - now) / 86400000);
+            if (days >= 0 && days <= 7) {
+              list.push({
+                id: sch.id || `task-${sch.scheduled_date}-${sch.topic_name}`,
+                type: 'task',
+                title: sch.topic_name || 'Study Focus Session',
+                subject: sch.subject_name || 'Target Subject',
+                daysLeft: days,
+                formattedDate: days === 0 ? 'Today' : new Date(sch.scheduled_date).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                }),
+                urgency: days <= 1 ? 'critical' : days <= 3 ? 'urgent' : 'upcoming',
+                categoryLabel: days === 0 ? '🎯 DUE TODAY' : '🎯 STUDY TASK',
               });
             }
           }
@@ -108,7 +186,7 @@ function MobileTopNavBar(props: BottomTabHeaderProps) {
 
       if (list.length > 0) {
         list.sort((a, b) => a.daysLeft - b.daysLeft);
-        setDeadlines(list);
+        setAttentionItems(list);
       }
     });
   }, []);
@@ -116,7 +194,15 @@ function MobileTopNavBar(props: BottomTabHeaderProps) {
   if (isDesktop) return null;
 
   const currentRouteName = props.route.name;
-  const currentDeadline = deadlines[activeDeadlineIdx % deadlines.length];
+
+  const filteredItems = attentionItems.filter((item) => {
+    if (selectedFilter === 'all') return true;
+    return item.type === selectedFilter;
+  });
+
+  const examCount = attentionItems.filter((i) => i.type === 'exam').length;
+  const asgCount = attentionItems.filter((i) => i.type === 'assignment').length;
+  const taskCount = attentionItems.filter((i) => i.type === 'task').length;
 
   const TAB_ITEMS = [
     { name: 'index', label: 'Today', icon: '🏠', path: '/(tabs)' },
@@ -127,6 +213,16 @@ function MobileTopNavBar(props: BottomTabHeaderProps) {
     { name: 'progress', label: 'Progress', icon: '📊', path: '/(tabs)/progress' },
     { name: 'profile', label: 'Profile', icon: '👤', path: '/(tabs)/profile' },
   ];
+
+  const handleCardPress = (item: AttentionItem) => {
+    if (item.type === 'exam') {
+      router.push('/exams' as any);
+    } else if (item.type === 'assignment') {
+      router.push('/(tabs)/planner' as any);
+    } else {
+      router.push('/(tabs)/planner' as any);
+    }
+  };
 
   return (
     <SafeAreaView edges={['top']} style={topS.safe}>
@@ -157,50 +253,153 @@ function MobileTopNavBar(props: BottomTabHeaderProps) {
           </TouchableOpacity>
         </View>
 
-        {/* ── Upcoming Deadline & Days Remaining Card Section ── */}
-        {currentDeadline && (
-          <TouchableOpacity
-            style={topS.deadlineCard}
-            onPress={() => {
-              if (deadlines.length > 1) {
-                setActiveDeadlineIdx((prev) => (prev + 1) % deadlines.length);
-              } else {
-                router.push(currentDeadline.type === 'exam' ? ('/exams' as any) : ('/assignments' as any));
-              }
-            }}
-            activeOpacity={0.85}
-          >
-            <View style={topS.deadlineLeft}>
-              <View style={[
-                topS.deadlineIconBox,
-                currentDeadline.type === 'exam' ? topS.iconBoxExam : topS.iconBoxAsg
-              ]}>
-                <Text style={topS.deadlineEmoji}>
-                  {currentDeadline.type === 'exam' ? '📅' : '📝'}
-                </Text>
+        {/* ── ATTENTION NEEDED / URGENT DEADLINES SECTION ── */}
+        <View style={topS.attentionSection}>
+          <View style={topS.attentionHeaderRow}>
+            <View style={topS.attentionTitleGroup}>
+              <View style={topS.pulsingDot} />
+              <Text style={topS.attentionHeading}>⚡ ATTENTION NEEDED</Text>
+              <View style={topS.countBadge}>
+                <Text style={topS.countBadgeText}>{attentionItems.length} Due Soon</Text>
               </View>
-              <View style={{ flex: 1 }}>
-                <View style={topS.deadlineMetaRow}>
-                  <Text style={topS.deadlineTag}>
-                    {currentDeadline.type === 'exam' ? 'EXAM DEADLINE' : 'ASSIGNMENT DUE'}
+            </View>
+
+            <TouchableOpacity
+              style={topS.collapseBtn}
+              onPress={() => setIsSectionCollapsed(!isSectionCollapsed)}
+              activeOpacity={0.7}
+            >
+              <Text style={topS.collapseBtnText}>{isSectionCollapsed ? 'Show ▲' : 'Hide ▼'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {!isSectionCollapsed && (
+            <>
+              {/* Category Filter Chips */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={topS.filterRow}
+              >
+                <TouchableOpacity
+                  style={[topS.filterChip, selectedFilter === 'all' && topS.filterChipActive]}
+                  onPress={() => setSelectedFilter('all')}
+                  activeOpacity={0.75}
+                >
+                  <Text style={[topS.filterChipText, selectedFilter === 'all' && topS.filterChipTextActive]}>
+                    All ({attentionItems.length})
                   </Text>
-                  <View style={topS.daysLeftPill}>
-                    <Text style={topS.daysLeftText}>
-                      ⏳ {currentDeadline.daysLeft === 0 ? 'Today!' : `${currentDeadline.daysLeft}d left`}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={topS.deadlineTitle} numberOfLines={1}>
-                  {currentDeadline.title}
-                </Text>
-              </View>
-            </View>
-            <View style={topS.deadlineRightActions}>
-              <Text style={topS.deadlineDateText}>{currentDeadline.formattedDate}</Text>
-              <Text style={topS.deadlineChevron}>›</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[topS.filterChip, selectedFilter === 'task' && topS.filterChipActive]}
+                  onPress={() => setSelectedFilter('task')}
+                  activeOpacity={0.75}
+                >
+                  <Text style={[topS.filterChipText, selectedFilter === 'task' && topS.filterChipTextActive]}>
+                    🎯 Tasks ({taskCount})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[topS.filterChip, selectedFilter === 'exam' && topS.filterChipActive]}
+                  onPress={() => setSelectedFilter('exam')}
+                  activeOpacity={0.75}
+                >
+                  <Text style={[topS.filterChipText, selectedFilter === 'exam' && topS.filterChipTextActive]}>
+                    📅 Exams ({examCount})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[topS.filterChip, selectedFilter === 'assignment' && topS.filterChipActive]}
+                  onPress={() => setSelectedFilter('assignment')}
+                  activeOpacity={0.75}
+                >
+                  <Text style={[topS.filterChipText, selectedFilter === 'assignment' && topS.filterChipTextActive]}>
+                    📝 Assignments ({asgCount})
+                  </Text>
+                </TouchableOpacity>
+              </ScrollView>
+
+              {/* Multi-Card Attention Tray */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={topS.cardsScroll}
+              >
+                {filteredItems.map((item) => {
+                  const isCritical = item.urgency === 'critical';
+                  const isUrgent = item.urgency === 'urgent';
+
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[
+                        topS.card,
+                        isCritical ? topS.cardCritical : isUrgent ? topS.cardUrgent : topS.cardUpcoming,
+                      ]}
+                      onPress={() => handleCardPress(item)}
+                      activeOpacity={0.85}
+                    >
+                      {/* Top Meta Bar */}
+                      <View style={topS.cardTopRow}>
+                        <View
+                          style={[
+                            topS.urgencyTag,
+                            isCritical ? topS.tagCritical : isUrgent ? topS.tagUrgent : topS.tagUpcoming,
+                          ]}
+                        >
+                          <Text style={topS.urgencyTagText}>
+                            {item.type === 'exam' ? '📅' : item.type === 'assignment' ? '📝' : '🎯'}{' '}
+                            {item.categoryLabel}
+                          </Text>
+                        </View>
+                        <View
+                          style={[
+                            topS.daysPill,
+                            isCritical ? topS.daysPillCritical : isUrgent ? topS.daysPillUrgent : topS.daysPillUpcoming,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              topS.daysPillText,
+                              isCritical
+                                ? topS.daysPillTextCritical
+                                : isUrgent
+                                ? topS.daysPillTextUrgent
+                                : topS.daysPillTextUpcoming,
+                            ]}
+                          >
+                            ⏳ {item.daysLeft === 0 ? 'Today!' : `${item.daysLeft}d left`}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Title */}
+                      <Text style={topS.cardTitle} numberOfLines={2}>
+                        {item.title}
+                      </Text>
+
+                      {/* Footer Row */}
+                      <View style={topS.cardFooter}>
+                        <View style={topS.subjectPill}>
+                          <Text style={topS.subjectPillText} numberOfLines={1}>
+                            📚 {item.subject}
+                          </Text>
+                        </View>
+                        <View style={topS.dateActionGroup}>
+                          <Text style={topS.dateText}>{item.formattedDate}</Text>
+                          <Text style={topS.actionChevron}>›</Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </>
+          )}
+        </View>
 
         {/* Horizontal Navigation Pills */}
         <ScrollView
@@ -242,7 +441,7 @@ const topS = StyleSheet.create({
     borderBottomColor: 'rgba(0, 223, 178, 0.15)',
   },
   headerContainer: {
-    backgroundColor: 'rgba(7, 14, 26, 0.95)',
+    backgroundColor: 'rgba(7, 14, 26, 0.96)',
     paddingTop: 8,
     paddingBottom: 8,
     ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)' } as any) : {}),
@@ -301,96 +500,218 @@ const topS = StyleSheet.create({
     fontSize: 13,
   },
 
-  // ── Deadline Card Section Styles ──
-  deadlineCard: {
-    marginHorizontal: 14,
+  // ── Attention Needed Section Styles ──
+  attentionSection: {
     marginBottom: 8,
-    backgroundColor: 'rgba(11, 21, 38, 0.92)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 223, 178, 0.28)',
-    paddingVertical: 7,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
+  },
+  attentionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    ...(Platform.OS === 'web'
-      ? ({
-        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
-        cursor: 'pointer',
-      } as any)
-      : {}),
+    marginBottom: 6,
+    paddingHorizontal: 2,
   },
-  deadlineLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-    flex: 1,
-  },
-  deadlineIconBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  iconBoxExam: {
-    backgroundColor: 'rgba(245, 158, 11, 0.14)',
-    borderColor: 'rgba(245, 158, 11, 0.35)',
-  },
-  iconBoxAsg: {
-    backgroundColor: 'rgba(0, 223, 178, 0.14)',
-    borderColor: 'rgba(0, 223, 178, 0.35)',
-  },
-  deadlineEmoji: {
-    fontSize: 14,
-  },
-  deadlineMetaRow: {
+  attentionTitleGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 1,
   },
-  deadlineTag: {
-    color: '#8E9BAE',
-    fontSize: 9.5,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+  pulsingDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
   },
-  daysLeftPill: {
-    backgroundColor: 'rgba(245, 158, 11, 0.18)',
+  attentionHeading: {
+    color: '#F87171',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  countBadge: {
+    backgroundColor: 'rgba(239, 68, 68, 0.16)',
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.4)',
+    borderColor: 'rgba(239, 68, 68, 0.35)',
     borderRadius: 99,
     paddingHorizontal: 6,
     paddingVertical: 1,
   },
-  daysLeftText: {
-    color: '#F59E0B',
-    fontSize: 10,
+  countBadgeText: {
+    color: '#FCA5A5',
+    fontSize: 9.5,
     fontWeight: '800',
   },
-  deadlineTitle: {
-    color: '#FFFFFF',
-    fontSize: 12,
+  collapseBtn: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  collapseBtnText: {
+    color: '#94A3B8',
+    fontSize: 10,
     fontWeight: '700',
   },
-  deadlineRightActions: {
+
+  // Filter Row
+  filterRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 8,
+    paddingHorizontal: 2,
+  },
+  filterChip: {
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 8,
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    borderWidth: 1,
+    borderColor: 'rgba(51, 65, 85, 0.7)',
+  },
+  filterChipActive: {
+    backgroundColor: 'rgba(0, 223, 178, 0.16)',
+    borderColor: '#00DFB2',
+  },
+  filterChipText: {
+    color: '#94A3B8',
+    fontSize: 10.5,
+    fontWeight: '700',
+  },
+  filterChipTextActive: {
+    color: '#00DFB2',
+  },
+
+  // Cards Scroll
+  cardsScroll: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingBottom: 4,
+  },
+  card: {
+    width: 250,
+    borderRadius: 14,
+    padding: 11,
+    backgroundColor: 'rgba(11, 21, 38, 0.95)',
+    borderWidth: 1.2,
+    ...(Platform.OS === 'web'
+      ? ({
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.45)',
+        cursor: 'pointer',
+      } as any)
+      : {}),
+  },
+  cardCritical: {
+    borderColor: 'rgba(239, 68, 68, 0.55)',
+    backgroundColor: 'rgba(28, 14, 24, 0.95)',
+  },
+  cardUrgent: {
+    borderColor: 'rgba(245, 158, 11, 0.5)',
+    backgroundColor: 'rgba(28, 21, 14, 0.95)',
+  },
+  cardUpcoming: {
+    borderColor: 'rgba(0, 223, 178, 0.35)',
+    backgroundColor: 'rgba(11, 25, 34, 0.95)',
+  },
+
+  cardTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
     gap: 6,
-    marginLeft: 8,
   },
-  deadlineDateText: {
-    color: '#94A3B8',
-    fontSize: 11,
-    fontWeight: '600',
+  urgencyTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
-  deadlineChevron: {
+  tagCritical: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  tagUrgent: {
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+  },
+  tagUpcoming: {
+    backgroundColor: 'rgba(0, 223, 178, 0.15)',
+  },
+  urgencyTagText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+
+  daysPill: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 99,
+    borderWidth: 1,
+  },
+  daysPillCritical: {
+    backgroundColor: 'rgba(239, 68, 68, 0.22)',
+    borderColor: 'rgba(239, 68, 68, 0.5)',
+  },
+  daysPillUrgent: {
+    backgroundColor: 'rgba(245, 158, 11, 0.22)',
+    borderColor: 'rgba(245, 158, 11, 0.5)',
+  },
+  daysPillUpcoming: {
+    backgroundColor: 'rgba(0, 223, 178, 0.16)',
+    borderColor: 'rgba(0, 223, 178, 0.4)',
+  },
+  daysPillText: {
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  daysPillTextCritical: {
+    color: '#F87171',
+  },
+  daysPillTextUrgent: {
+    color: '#FBBF24',
+  },
+  daysPillTextUpcoming: {
     color: '#00DFB2',
-    fontSize: 16,
+  },
+
+  cardTitle: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '800',
+    lineHeight: 16,
+    marginBottom: 8,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  subjectPill: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    maxWidth: '65%',
+  },
+  subjectPillText: {
+    color: '#94A3B8',
+    fontSize: 10,
     fontWeight: '700',
+  },
+  dateActionGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  dateText: {
+    color: '#CBD5E1',
+    fontSize: 10.5,
+    fontWeight: '700',
+  },
+  actionChevron: {
+    color: '#00DFB2',
+    fontSize: 14,
+    fontWeight: '800',
   },
 
   // ── Tabs Pills ──
