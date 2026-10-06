@@ -7,6 +7,10 @@ export interface StudySchedule {
   start_time?: string | null;
   end_time?: string | null;
   completed: boolean;
+  // Optional display-friendly fields returned by enriched endpoints
+  topic_name?: string | null;
+  subject_name?: string | null;
+  duration_minutes?: number | null;
 }
 
 export interface GenerateScheduleInput {

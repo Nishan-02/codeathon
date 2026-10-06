@@ -1,11 +1,14 @@
 import { CONFIG } from '../constants/config';
-import { getIdToken } from './firebase';
+
+// ── Mock token provider ───────────────────────────────────────────────────────
+// Returns null in mock-auth mode; will be swapped for real Firebase token later
+const getMockToken = (): string | null => null;
 
 export async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = await getIdToken();
+  const token = getMockToken();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
