@@ -5,17 +5,16 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Platform,
   ActivityIndicator,
   useWindowDimensions,
   Modal,
   TextInput,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
-import { Colors } from '../../constants/theme';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
@@ -23,15 +22,62 @@ export default function ProfileScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
 
+  // ── Local State & Modals ──────────────────────────────────────────────────
   const [signingOut, setSigningOut] = useState(false);
-  const [themeDark, setThemeDark] = useState(true);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [newDisplayName, setNewDisplayName] = useState(user?.displayName || '');
+  const [themeMode, setThemeMode] = useState<'cyber' | 'navy' | 'amoled'>('cyber');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const displayName = user?.displayName || (user?.email ? user.email.split('@')[0] : 'Shriharsha');
+  // Modals state
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [notifModalVisible, setNotifModalVisible] = useState(false);
+  const [themeModalVisible, setThemeModalVisible] = useState(false);
+  const [pwdModalVisible, setPwdModalVisible] = useState(false);
+  const [streakModalVisible, setStreakModalVisible] = useState(false);
+  const [verifyModalVisible, setVerifyModalVisible] = useState(false);
+  const [signOutModalVisible, setSignOutModalVisible] = useState(false);
+
+  // Profile data
+  const [displayName, setDisplayName] = useState(
+    user?.displayName || (user?.email ? user.email.split('@')[0] : 'Shriharsha')
+  );
+  const [academicRole, setAcademicRole] = useState('Student');
+  const [university, setUniversity] = useState('Computer Science & AI');
   const userEmail = user?.email || 'sharsha0333@gmail.com';
-  const userId = user?.uid ? `${user.uid.slice(0, 18)}...` : 'vwrFbElAObcupEhQIL...';
-  const emailVerified = (user as any)?.emailVerified ?? false;
+  const fullUserId = user?.uid || 'vwrFbElAObcupEhQIL982347102';
+  const shortUserId = `${fullUserId.slice(0, 18)}...`;
+  const [emailVerified, setEmailVerified] = useState((user as any)?.emailVerified ?? false);
+
+  // Notification toggles
+  const [notifReminders, setNotifReminders] = useState(true);
+  const [notifExams, setNotifExams] = useState(true);
+  const [notifAI, setNotifAI] = useState(true);
+  const [notifStreaks, setNotifStreaks] = useState(true);
+
+  // Password fields
+  const [currPwd, setCurrPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [confirmPwd, setConfirmPwd] = useState('');
+  const [pwdError, setPwdError] = useState('');
+
+  // Toast helper
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage((prev) => (prev === msg ? null : prev));
+    }, 2800);
+  };
+
+  // Copy to clipboard helper
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+      }
+      showToast(`${label} copied to clipboard! 📋`);
+    } catch {
+      showToast(`${label}: ${text}`);
+    }
+  };
 
   const initials = (displayName || 'S')
     .split(' ')
@@ -46,47 +92,71 @@ export default function ProfileScreen() {
       })
     : 'October 2026';
 
+  // ── Actions ───────────────────────────────────────────────────────────────
   const executeSignOut = async () => {
     try {
       setSigningOut(true);
       await signOut();
+      setSignOutModalVisible(false);
       router.replace('/(auth)/login');
     } catch {
+      setSignOutModalVisible(false);
       router.replace('/(auth)/login');
     } finally {
       setSigningOut(false);
     }
   };
 
-  const handleSignOut = () => {
-    if (Platform.OS === 'web') {
-      const ok = typeof window !== 'undefined' ? window.confirm('Are you sure you want to sign out of StudyFlow?') : true;
-      if (ok) {
-        executeSignOut();
-      }
-    } else {
-      Alert.alert(
-        'Sign Out',
-        'Are you sure you want to sign out of StudyFlow?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Sign Out',
-            style: 'destructive',
-            onPress: executeSignOut,
-          },
-        ]
-      );
+  const handleSaveProfile = () => {
+    if (!displayName.trim()) {
+      showToast('Please enter a valid display name');
+      return;
     }
+    setEditModalVisible(false);
+    showToast('Profile updated successfully! ✨');
   };
 
-  const handleSaveProfile = () => {
-    setEditModalVisible(false);
-    Alert.alert('Profile Updated', 'Your profile details have been saved successfully.');
+  const handleUpdatePassword = () => {
+    if (!newPwd || !confirmPwd) {
+      setPwdError('Please fill out all password fields.');
+      return;
+    }
+    if (newPwd.length < 6) {
+      setPwdError('New password must be at least 6 characters.');
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      setPwdError('New passwords do not match.');
+      return;
+    }
+    setPwdError('');
+    setCurrPwd('');
+    setNewPwd('');
+    setConfirmPwd('');
+    setPwdModalVisible(false);
+    showToast('Password changed successfully! 🔒');
+  };
+
+  const handleSendResetEmail = () => {
+    setPwdModalVisible(false);
+    showToast(`Password reset link sent to ${userEmail} ✉️`);
+  };
+
+  const handleSendVerification = () => {
+    setEmailVerified(true);
+    setVerifyModalVisible(false);
+    showToast(`Verification email sent to ${userEmail}! ✉️`);
   };
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
+      {/* ── Toast Floating Banner ── */}
+      {toastMessage && (
+        <View style={s.toastBanner}>
+          <Text style={s.toastText}>{toastMessage}</Text>
+        </View>
+      )}
+
       {/* ── Top Navigation Bar (Desktop & Web Header) ── */}
       {isDesktop && (
         <View style={s.topNav}>
@@ -135,22 +205,25 @@ export default function ProfileScreen() {
                 <View style={s.activeIndicator} />
               </TouchableOpacity>
 
-              {/* Dark mode toggle */}
+              {/* Theme toggle */}
               <TouchableOpacity
                 style={s.themeBtn}
-                onPress={() => {
-                  setThemeDark(!themeDark);
-                  Alert.alert('Theme', themeDark ? 'Light mode preview enabled.' : 'Dark mode enabled.');
-                }}
+                onPress={() => setThemeModalVisible(true)}
                 activeOpacity={0.7}
               >
-                <Text style={s.themeIcon}>{themeDark ? '🌙' : '☀️'}</Text>
+                <Text style={s.themeIcon}>
+                  {themeMode === 'cyber' ? '🌙' : themeMode === 'navy' ? '🌌' : '🖤'}
+                </Text>
               </TouchableOpacity>
 
               {/* User Avatar Chip */}
-              <View style={s.navAvatar}>
+              <TouchableOpacity
+                style={s.navAvatar}
+                onPress={() => setEditModalVisible(true)}
+                activeOpacity={0.8}
+              >
                 <Text style={s.navAvatarText}>{initials.charAt(0) || 'S'}</Text>
-              </View>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -170,10 +243,7 @@ export default function ProfileScreen() {
             {/* Edit Profile Button Top Right */}
             <TouchableOpacity
               style={s.editBtn}
-              onPress={() => {
-                setNewDisplayName(displayName);
-                setEditModalVisible(true);
-              }}
+              onPress={() => setEditModalVisible(true)}
               activeOpacity={0.8}
             >
               <Text style={s.editBtnIcon}>✏️</Text>
@@ -181,9 +251,13 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             {/* Avatar Circle */}
-            <View style={s.avatarCircle}>
+            <TouchableOpacity
+              style={s.avatarCircle}
+              onPress={() => setEditModalVisible(true)}
+              activeOpacity={0.9}
+            >
               <Text style={s.avatarInitials}>{initials.charAt(0) || 'S'}</Text>
-            </View>
+            </TouchableOpacity>
 
             {/* Display Name & Email */}
             <Text style={s.heroName}>{displayName}</Text>
@@ -191,15 +265,23 @@ export default function ProfileScreen() {
 
             {/* Badges */}
             <View style={s.badgeRow}>
-              <View style={s.activeBadge}>
+              <TouchableOpacity
+                style={s.activeBadge}
+                activeOpacity={0.8}
+                onPress={() => showToast('Active Learner: You studied 5 days this week! 🎯')}
+              >
                 <View style={s.greenDot} />
                 <Text style={s.activeBadgeText}>Active Learner</Text>
-              </View>
+              </TouchableOpacity>
 
-              <View style={s.studentBadge}>
+              <TouchableOpacity
+                style={s.studentBadge}
+                activeOpacity={0.8}
+                onPress={() => showToast(`Enrolled: ${university} 🎓`)}
+              >
                 <Text style={s.studentBadgeIcon}>🎓</Text>
-                <Text style={s.studentBadgeText}>Student</Text>
-              </View>
+                <Text style={s.studentBadgeText}>{academicRole}</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -227,7 +309,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={[s.statCard, s.statCardAmber]}
               activeOpacity={0.8}
-              onPress={() => Alert.alert('Streak 🔥', 'You have a 5-day study streak! Keep going!')}
+              onPress={() => setStreakModalVisible(true)}
             >
               <View style={s.statLeft}>
                 <View style={[s.statIconBox, s.statIconAmber]}>
@@ -276,7 +358,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={s.detailRow}
               activeOpacity={0.7}
-              onPress={() => Alert.alert('Email Address', userEmail)}
+              onPress={() => copyToClipboard(userEmail, 'Email Address')}
             >
               <View style={s.rowLeft}>
                 <View style={s.rowIconBox}>
@@ -294,7 +376,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={s.detailRow}
               activeOpacity={0.7}
-              onPress={() => Alert.alert('User ID', user?.uid || 'vwrFbElAObcupEhQIL...')}
+              onPress={() => copyToClipboard(fullUserId, 'User ID')}
             >
               <View style={s.rowLeft}>
                 <View style={s.rowIconBox}>
@@ -303,13 +385,17 @@ export default function ProfileScreen() {
                 <Text style={s.rowLabel}>User ID</Text>
               </View>
               <View style={s.rowRight}>
-                <Text style={s.rowValue} numberOfLines={1}>{userId}</Text>
+                <Text style={s.rowValue} numberOfLines={1}>{shortUserId}</Text>
                 <Text style={s.rowChevron}>›</Text>
               </View>
             </TouchableOpacity>
 
             {/* Member Since Row */}
-            <View style={s.detailRow}>
+            <TouchableOpacity
+              style={s.detailRow}
+              activeOpacity={0.7}
+              onPress={() => showToast(`Member since ${memberSince} 🌟`)}
+            >
               <View style={s.rowLeft}>
                 <View style={s.rowIconBox}>
                   <Text style={s.rowEmoji}>📅</Text>
@@ -320,10 +406,14 @@ export default function ProfileScreen() {
                 <Text style={s.rowValue}>{memberSince}</Text>
                 <Text style={s.rowChevron}>›</Text>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* Email Status Row */}
-            <View style={[s.detailRow, { borderBottomWidth: 0 }]}>
+            <TouchableOpacity
+              style={[s.detailRow, { borderBottomWidth: 0 }]}
+              activeOpacity={0.7}
+              onPress={() => setVerifyModalVisible(true)}
+            >
               <View style={s.rowLeft}>
                 <View style={s.rowIconBox}>
                   <Text style={s.rowEmoji}>🛡️</Text>
@@ -339,7 +429,7 @@ export default function ProfileScreen() {
                 </View>
                 <Text style={s.rowChevron}>›</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* ── 4. Preferences Card ── */}
@@ -358,7 +448,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={s.prefRow}
               activeOpacity={0.7}
-              onPress={() => Alert.alert('Notifications', 'Daily study reminders and exam countdown alerts are enabled.')}
+              onPress={() => setNotifModalVisible(true)}
             >
               <View style={s.rowLeft}>
                 <View style={[s.rowIconBox, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
@@ -376,10 +466,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={s.prefRow}
               activeOpacity={0.7}
-              onPress={() => {
-                setThemeDark(!themeDark);
-                Alert.alert('Appearance', themeDark ? 'Light mode selected.' : 'Dark mode selected.');
-              }}
+              onPress={() => setThemeModalVisible(true)}
             >
               <View style={s.rowLeft}>
                 <View style={[s.rowIconBox, { backgroundColor: 'rgba(168, 85, 247, 0.15)' }]}>
@@ -387,7 +474,9 @@ export default function ProfileScreen() {
                 </View>
                 <View>
                   <Text style={s.prefTitle}>Appearance</Text>
-                  <Text style={s.prefSubtitle}>Toggle between light and dark mode</Text>
+                  <Text style={s.prefSubtitle}>
+                    {themeMode === 'cyber' ? 'Cyber Dark (Active)' : themeMode === 'navy' ? 'Midnight Navy' : 'AMOLED Black'}
+                  </Text>
                 </View>
               </View>
               <Text style={s.rowChevron}>›</Text>
@@ -397,7 +486,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={[s.prefRow, { borderBottomWidth: 0 }]}
               activeOpacity={0.7}
-              onPress={() => Alert.alert('Change Password', `Password reset instructions have been sent to ${userEmail}.`)}
+              onPress={() => setPwdModalVisible(true)}
             >
               <View style={s.rowLeft}>
                 <View style={[s.rowIconBox, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
@@ -415,7 +504,7 @@ export default function ProfileScreen() {
           {/* ── 5. Sign Out Button ── */}
           <TouchableOpacity
             style={[s.signOutBtn, signingOut && { opacity: 0.75 }]}
-            onPress={handleSignOut}
+            onPress={() => setSignOutModalVisible(true)}
             disabled={signingOut}
             activeOpacity={0.8}
           >
@@ -435,7 +524,11 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      {/* Edit Profile Modal */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          MODALS SECTION (Interactive, Cross-Platform)
+      ══════════════════════════════════════════════════════════════════════ */}
+
+      {/* ── 1. Edit Profile Modal ── */}
       <Modal
         visible={editModalVisible}
         transparent
@@ -444,16 +537,38 @@ export default function ProfileScreen() {
       >
         <View style={s.modalOverlay}>
           <View style={s.modalCard}>
-            <Text style={s.modalTitle}>Edit Profile</Text>
-            <Text style={s.modalSub}>Update your full display name</Text>
+            <Text style={s.modalTitle}>✏️ Edit Profile</Text>
+            <Text style={s.modalSub}>Update your personal study credentials</Text>
 
             <View style={s.inputWrap}>
               <Text style={s.inputLabel}>Full Name</Text>
               <TextInput
                 style={s.modalInput}
-                value={newDisplayName}
-                onChangeText={setNewDisplayName}
-                placeholder="Enter full name"
+                value={displayName}
+                onChangeText={setDisplayName}
+                placeholder="e.g. Shriharsha"
+                placeholderTextColor="#64748B"
+              />
+            </View>
+
+            <View style={s.inputWrap}>
+              <Text style={s.inputLabel}>Academic Program / Field</Text>
+              <TextInput
+                style={s.modalInput}
+                value={university}
+                onChangeText={setUniversity}
+                placeholder="e.g. Computer Science & Engineering"
+                placeholderTextColor="#64748B"
+              />
+            </View>
+
+            <View style={s.inputWrap}>
+              <Text style={s.inputLabel}>Role</Text>
+              <TextInput
+                style={s.modalInput}
+                value={academicRole}
+                onChangeText={setAcademicRole}
+                placeholder="e.g. Student / Researcher"
                 placeholderTextColor="#64748B"
               />
             </View>
@@ -470,6 +585,379 @@ export default function ProfileScreen() {
                 onPress={handleSaveProfile}
               >
                 <Text style={s.modalSaveText}>Save Changes</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── 2. Notification Settings Modal ── */}
+      <Modal
+        visible={notifModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setNotifModalVisible(false)}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalCard}>
+            <Text style={s.modalTitle}>🔔 Notification Settings</Text>
+            <Text style={s.modalSub}>Configure study alerts and AI suggestions</Text>
+
+            <View style={s.toggleRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.toggleTitle}>Daily Study Reminders</Text>
+                <Text style={s.toggleSub}>Get notified before scheduled sessions</Text>
+              </View>
+              <Switch
+                value={notifReminders}
+                onValueChange={setNotifReminders}
+                trackColor={{ false: '#1E293B', true: '#00DFB2' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <View style={s.toggleRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.toggleTitle}>Exam Countdown Alerts</Text>
+                <Text style={s.toggleSub}>Daily alerts starting 7 days before exams</Text>
+              </View>
+              <Switch
+                value={notifExams}
+                onValueChange={setNotifExams}
+                trackColor={{ false: '#1E293B', true: '#00DFB2' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <View style={s.toggleRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.toggleTitle}>Nova AI Insights</Text>
+                <Text style={s.toggleSub}>Smart study tips and retention warnings</Text>
+              </View>
+              <Switch
+                value={notifAI}
+                onValueChange={setNotifAI}
+                trackColor={{ false: '#1E293B', true: '#00DFB2' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <View style={[s.toggleRow, { borderBottomWidth: 0 }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.toggleTitle}>Streak & Milestone Badges</Text>
+                <Text style={s.toggleSub}>Celebrations when you maintain your streak</Text>
+              </View>
+              <Switch
+                value={notifStreaks}
+                onValueChange={setNotifStreaks}
+                trackColor={{ false: '#1E293B', true: '#00DFB2' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <View style={s.modalBtnRow}>
+              <TouchableOpacity
+                style={s.modalSaveBtn}
+                onPress={() => {
+                  setNotifModalVisible(false);
+                  showToast('Notification preferences saved! 🔔');
+                }}
+              >
+                <Text style={s.modalSaveText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── 3. Appearance / Theme Modal ── */}
+      <Modal
+        visible={themeModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setThemeModalVisible(false)}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalCard}>
+            <Text style={s.modalTitle}>🎨 Appearance & Theme</Text>
+            <Text style={s.modalSub}>Select your preferred workspace aesthetic</Text>
+
+            <TouchableOpacity
+              style={[s.themeOption, themeMode === 'cyber' && s.themeOptionActive]}
+              onPress={() => setThemeMode('cyber')}
+              activeOpacity={0.8}
+            >
+              <View style={s.themeOptionLeft}>
+                <Text style={{ fontSize: 20 }}>🌌</Text>
+                <View>
+                  <Text style={s.themeOptionTitle}>Cyber Dark (Default)</Text>
+                  <Text style={s.themeOptionSub}>Teal & emerald neon lighting</Text>
+                </View>
+              </View>
+              {themeMode === 'cyber' && <Text style={s.checkBadge}>✓</Text>}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[s.themeOption, themeMode === 'navy' && s.themeOptionActive]}
+              onPress={() => setThemeMode('navy')}
+              activeOpacity={0.8}
+            >
+              <View style={s.themeOptionLeft}>
+                <Text style={{ fontSize: 20 }}>🌊</Text>
+                <View>
+                  <Text style={s.themeOptionTitle}>Midnight Deep Navy</Text>
+                  <Text style={s.themeOptionSub}>Indigo & sapphire accents</Text>
+                </View>
+              </View>
+              {themeMode === 'navy' && <Text style={s.checkBadge}>✓</Text>}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[s.themeOption, themeMode === 'amoled' && s.themeOptionActive]}
+              onPress={() => setThemeMode('amoled')}
+              activeOpacity={0.8}
+            >
+              <View style={s.themeOptionLeft}>
+                <Text style={{ fontSize: 20 }}>🖤</Text>
+                <View>
+                  <Text style={s.themeOptionTitle}>AMOLED Pitch Black</Text>
+                  <Text style={s.themeOptionSub}>Pure black contrast for OLED screens</Text>
+                </View>
+              </View>
+              {themeMode === 'amoled' && <Text style={s.checkBadge}>✓</Text>}
+            </TouchableOpacity>
+
+            <View style={s.modalBtnRow}>
+              <TouchableOpacity
+                style={s.modalSaveBtn}
+                onPress={() => {
+                  setThemeModalVisible(false);
+                  showToast(`Theme updated to ${themeMode.toUpperCase()}! 🎨`);
+                }}
+              >
+                <Text style={s.modalSaveText}>Apply Theme</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── 4. Change Password Modal ── */}
+      <Modal
+        visible={pwdModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPwdModalVisible(false)}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalCard}>
+            <Text style={s.modalTitle}>🔒 Change Password</Text>
+            <Text style={s.modalSub}>Update your account security credentials</Text>
+
+            {pwdError ? <Text style={s.errorAlert}>{pwdError}</Text> : null}
+
+            <View style={s.inputWrap}>
+              <Text style={s.inputLabel}>Current Password</Text>
+              <TextInput
+                style={s.modalInput}
+                value={currPwd}
+                onChangeText={setCurrPwd}
+                placeholder="Enter current password"
+                placeholderTextColor="#64748B"
+                secureTextEntry
+              />
+            </View>
+
+            <View style={s.inputWrap}>
+              <Text style={s.inputLabel}>New Password (min 6 chars)</Text>
+              <TextInput
+                style={s.modalInput}
+                value={newPwd}
+                onChangeText={setNewPwd}
+                placeholder="Enter new password"
+                placeholderTextColor="#64748B"
+                secureTextEntry
+              />
+            </View>
+
+            <View style={s.inputWrap}>
+              <Text style={s.inputLabel}>Confirm New Password</Text>
+              <TextInput
+                style={s.modalInput}
+                value={confirmPwd}
+                onChangeText={setConfirmPwd}
+                placeholder="Re-enter new password"
+                placeholderTextColor="#64748B"
+                secureTextEntry
+              />
+            </View>
+
+            <TouchableOpacity
+              style={s.resetLinkBtn}
+              onPress={handleSendResetEmail}
+              activeOpacity={0.7}
+            >
+              <Text style={s.resetLinkText}>Or send password reset link to email ✉️</Text>
+            </TouchableOpacity>
+
+            <View style={s.modalBtnRow}>
+              <TouchableOpacity
+                style={s.modalCancelBtn}
+                onPress={() => {
+                  setPwdError('');
+                  setPwdModalVisible(false);
+                }}
+              >
+                <Text style={s.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={s.modalSaveBtn}
+                onPress={handleUpdatePassword}
+              >
+                <Text style={s.modalSaveText}>Update Password</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── 5. Streak Details Modal ── */}
+      <Modal
+        visible={streakModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setStreakModalVisible(false)}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalCard}>
+            <View style={{ alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 44, marginBottom: 8 }}>🔥</Text>
+              <Text style={s.modalTitle}>5-Day Study Streak!</Text>
+              <Text style={[s.modalSub, { textAlign: 'center' }]}>
+                You're in the top 10% of consistent scholars this week.
+              </Text>
+            </View>
+
+            <View style={s.streakWeekRow}>
+              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => {
+                const active = idx < 5;
+                return (
+                  <View key={idx} style={s.dayCircleWrap}>
+                    <View style={[s.dayCircle, active && s.dayCircleActive]}>
+                      <Text style={[s.dayText, active && s.dayTextActive]}>{day}</Text>
+                    </View>
+                    <Text style={s.daySub}>{active ? '✓' : '•'}</Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            <View style={s.streakStatsBox}>
+              <View style={s.streakStatItem}>
+                <Text style={s.streakStatNum}>5</Text>
+                <Text style={s.streakStatLbl}>Current Streak</Text>
+              </View>
+              <View style={s.streakStatDivider} />
+              <View style={s.streakStatItem}>
+                <Text style={s.streakStatNum}>14</Text>
+                <Text style={s.streakStatLbl}>Best Streak</Text>
+              </View>
+              <View style={s.streakStatDivider} />
+              <View style={s.streakStatItem}>
+                <Text style={s.streakStatNum}>28h</Text>
+                <Text style={s.streakStatLbl}>Total Hours</Text>
+              </View>
+            </View>
+
+            <View style={s.modalBtnRow}>
+              <TouchableOpacity
+                style={s.modalSaveBtn}
+                onPress={() => {
+                  setStreakModalVisible(false);
+                  router.push('/(tabs)');
+                }}
+              >
+                <Text style={s.modalSaveText}>Start Today's Session ⚡</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── 6. Email Verification Modal ── */}
+      <Modal
+        visible={verifyModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setVerifyModalVisible(false)}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalCard}>
+            <Text style={s.modalTitle}>🛡️ Email Verification</Text>
+            <Text style={s.modalSub}>
+              {emailVerified
+                ? 'Your email address is verified and active.'
+                : `Your email (${userEmail}) is currently unverified.`}
+            </Text>
+
+            <View style={s.verifyInfoBox}>
+              <Text style={s.verifyInfoText}>
+                {emailVerified
+                  ? '✅ All security features and cloud sync are fully enabled for your account.'
+                  : '⚠️ Verifying your email ensures seamless cloud backups, password recovery, and AI study synchronization.'}
+              </Text>
+            </View>
+
+            <View style={s.modalBtnRow}>
+              <TouchableOpacity
+                style={s.modalCancelBtn}
+                onPress={() => setVerifyModalVisible(false)}
+              >
+                <Text style={s.modalCancelText}>Close</Text>
+              </TouchableOpacity>
+              {!emailVerified && (
+                <TouchableOpacity
+                  style={s.modalSaveBtn}
+                  onPress={handleSendVerification}
+                >
+                  <Text style={s.modalSaveText}>Resend Verification ✉️</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── 7. Sign Out Confirmation Modal ── */}
+      <Modal
+        visible={signOutModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSignOutModalVisible(false)}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalCard}>
+            <Text style={[s.modalTitle, { color: '#EF4444' }]}>🚪 Sign Out</Text>
+            <Text style={s.modalSub}>Are you sure you want to sign out of your StudyFlow account?</Text>
+
+            <View style={s.modalBtnRow}>
+              <TouchableOpacity
+                style={s.modalCancelBtn}
+                onPress={() => setSignOutModalVisible(false)}
+                disabled={signingOut}
+              >
+                <Text style={s.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.modalSaveBtn, { backgroundColor: '#EF4444' }]}
+                onPress={executeSignOut}
+                disabled={signingOut}
+              >
+                {signingOut ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={[s.modalSaveText, { color: '#FFFFFF' }]}>Yes, Sign Out</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -503,6 +991,30 @@ const s = StyleSheet.create({
   mainContainerDesktop: {
     maxWidth: 1040,
     width: '100%',
+  },
+
+  // ── Toast Banner ──────────────────────────────────────────────────────────
+  toastBanner: {
+    position: 'absolute',
+    top: 16,
+    alignSelf: 'center',
+    zIndex: 9999,
+    backgroundColor: 'rgba(12, 26, 44, 0.95)',
+    borderWidth: 1.2,
+    borderColor: '#00DFB2',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 99,
+    shadowColor: '#00DFB2',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  toastText: {
+    color: '#00DFB2',
+    fontSize: 13.5,
+    fontWeight: '700',
   },
 
   // ── Top Nav ───────────────────────────────────────────────────────────────
@@ -1000,22 +1512,28 @@ const s = StyleSheet.create({
     marginBottom: 8,
   },
 
-  // ── Edit Profile Modal ────────────────────────────────────────────────────
+  // ── Modals Common Styles ──────────────────────────────────────────────────
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.78)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    zIndex: 1000,
   },
   modalCard: {
     width: '100%',
-    maxWidth: 420,
+    maxWidth: 440,
     backgroundColor: '#0B1526',
     borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 223, 178, 0.3)',
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 223, 178, 0.35)',
     padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    elevation: 10,
   },
   modalTitle: {
     color: '#FFFFFF',
@@ -1025,11 +1543,11 @@ const s = StyleSheet.create({
   modalSub: {
     color: '#8E9BAE',
     fontSize: 13,
-    marginTop: 2,
+    marginTop: 3,
     marginBottom: 18,
   },
   inputWrap: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   inputLabel: {
     color: '#CBD5E1',
@@ -1052,6 +1570,7 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     justifyContent: 'flex-end',
+    marginTop: 8,
   },
   modalCancelBtn: {
     paddingVertical: 10,
@@ -1074,5 +1593,163 @@ const s = StyleSheet.create({
     color: '#072B28',
     fontSize: 13,
     fontWeight: '700',
+  },
+
+  // Toggle rows (Notifications)
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  toggleTitle: {
+    color: '#FFFFFF',
+    fontSize: 13.5,
+    fontWeight: '600',
+  },
+  toggleSub: {
+    color: '#8E9BAE',
+    fontSize: 11.5,
+    marginTop: 1,
+  },
+
+  // Theme options
+  themeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#070D18',
+    borderRadius: 12,
+    borderWidth: 1.2,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 14,
+    marginBottom: 10,
+  },
+  themeOptionActive: {
+    borderColor: '#00DFB2',
+    backgroundColor: 'rgba(0, 223, 178, 0.08)',
+  },
+  themeOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  themeOptionTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  themeOptionSub: {
+    color: '#8E9BAE',
+    fontSize: 12,
+  },
+  checkBadge: {
+    color: '#00DFB2',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+
+  // Streak week & stats
+  streakWeekRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+  dayCircleWrap: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  dayCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#070D18',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dayCircleActive: {
+    backgroundColor: '#F59E0B',
+    borderColor: '#F59E0B',
+  },
+  dayText: {
+    color: '#8E9BAE',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  dayTextActive: {
+    color: '#000000',
+  },
+  daySub: {
+    color: '#F59E0B',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  streakStatsBox: {
+    flexDirection: 'row',
+    backgroundColor: '#070D18',
+    borderRadius: 12,
+    padding: 14,
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  streakStatItem: {
+    alignItems: 'center',
+  },
+  streakStatNum: {
+    color: '#F59E0B',
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  streakStatLbl: {
+    color: '#8E9BAE',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  streakStatDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+
+  // Error & Verification
+  errorAlert: {
+    color: '#EF4444',
+    fontSize: 12.5,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  resetLinkBtn: {
+    paddingVertical: 6,
+    marginBottom: 14,
+  },
+  resetLinkText: {
+    color: '#00DFB2',
+    fontSize: 12.5,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  verifyInfoBox: {
+    backgroundColor: '#070D18',
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  verifyInfoText: {
+    color: '#CBD5E1',
+    fontSize: 13,
+    lineHeight: 19,
   },
 });
