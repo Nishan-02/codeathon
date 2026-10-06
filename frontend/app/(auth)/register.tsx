@@ -11,6 +11,7 @@ import {
   useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
+  ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,10 +42,20 @@ function GlassInput({
   return (
     <View style={gi.wrap}>
       <Text style={gi.label}>{label}</Text>
-      <View style={[gi.row, focused && gi.rowFocused]}>
+      <View style={[gi.box, focused && gi.boxFocused]}>
         <Text style={gi.icon}>{icon}</Text>
         <TextInput
-          style={[gi.input, Platform.OS === 'web' ? ({ outline: 'none' } as any) : null]}
+          style={[
+            gi.input,
+            Platform.OS === 'web'
+              ? ({
+                  outline: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#FFFFFF',
+                  WebkitBoxShadow: '0 0 0 1000px transparent inset',
+                } as any)
+              : null,
+          ]}
           placeholder={placeholder}
           placeholderTextColor="#5C6E82"
           value={value}
@@ -59,7 +70,8 @@ function GlassInput({
           <TouchableOpacity
             onPress={() => setShowPwd((v) => !v)}
             style={gi.eyeBtn}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.7}
           >
             <Text style={gi.eyeIcon}>{showPwd ? '🙈' : '👁️'}</Text>
           </TouchableOpacity>
@@ -77,32 +89,34 @@ const gi = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 6,
   },
-  row: {
+  box: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(13, 22, 38, 0.75)',
+    backgroundColor: 'rgba(15, 25, 42, 0.72)',
     borderRadius: 14,
     borderWidth: 1.2,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     paddingHorizontal: 16,
+    height: 48,
     gap: 12,
-    height: 50,
   },
-  rowFocused: {
-    borderColor: '#00C9A7',
-    backgroundColor: 'rgba(15, 28, 48, 0.9)',
-    shadowColor: '#00C9A7',
+  boxFocused: {
+    borderColor: '#00DFB2',
+    backgroundColor: 'rgba(18, 32, 54, 0.88)',
+    shadowColor: '#00DFB2',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.4,
     shadowRadius: 10,
-    elevation: 3,
+    elevation: 4,
   },
   icon: { fontSize: 16 },
   input: {
     flex: 1,
     color: '#FFFFFF',
     fontSize: 14.5,
+    backgroundColor: 'transparent',
     height: '100%',
+    padding: 0,
   },
   eyeBtn: { padding: 4 },
   eyeIcon: { color: '#94A3B8', fontSize: 16 },
@@ -118,7 +132,7 @@ export default function RegisterScreen() {
   const { signUp } = useAuth();
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isDesktop = width >= 960;
+  const isDesktop = width >= 900;
 
   const btnScale = useRef(new Animated.Value(1)).current;
   const pressIn = () => Animated.spring(btnScale, { toValue: 0.97, useNativeDriver: true }).start();
@@ -149,150 +163,179 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      {/* Background glow */}
-      <View style={[s.bgGlowTopLeft, Platform.OS === 'web' ? ({ filter: 'blur(90px)' } as any) : null]} />
-      <View style={[s.bgGlowBottomRight, Platform.OS === 'web' ? ({ filter: 'blur(100px)' } as any) : null]} />
+    <ImageBackground
+      source={require('../../assets/images/login-bg.png')}
+      style={s.bgImage}
+      resizeMode="cover"
+    >
+      <View style={s.darkBackdrop} />
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={[s.scroll, isDesktop && s.scrollDesktop]}
-          keyboardShouldPersistTaps="handled"
+      <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View
-            style={[
-              s.card,
-              isDesktop && s.cardDesktop,
-              Platform.OS === 'web' ? ({ backdropFilter: 'blur(24px)' } as any) : null,
+          <ScrollView
+            contentContainerStyle={[
+              s.scroll,
+              isDesktop && s.scrollDesktop,
             ]}
+            keyboardShouldPersistTaps="handled"
           >
-            {/* Header */}
-            <View style={s.brandHeader}>
-              <View style={s.logoSquare}>
-                <Text style={s.logoBookIcon}>📖</Text>
-              </View>
-              <View>
-                <Text style={s.brandTitle}>StudyFlow</Text>
-                <Text style={s.brandSubtitle}>AI-Powered Learning</Text>
-              </View>
-            </View>
-
-            <View style={s.welcomeWrap}>
-              <Text style={s.welcomeTitle}>Create Account ✨</Text>
-              <Text style={s.welcomeSub}>Start your AI-powered study journey today</Text>
-            </View>
-
-            <GlassInput
-              label="Full Name"
-              placeholder="John Doe"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-              icon="👤"
-            />
-            <GlassInput
-              label="Email Address"
-              placeholder="student@example.com"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-              icon="✉️"
-            />
-            <GlassInput
-              label="Password"
-              placeholder="Minimum 6 characters"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              icon="🔒"
-            />
-            <GlassInput
-              label="Confirm Password"
-              placeholder="Re-enter your password"
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              icon="🔑"
-            />
-
-            {/* Password strength */}
-            {password.length > 0 && (
-              <View style={s.strengthRow}>
-                {[1, 2, 3, 4].map((i) => (
-                  <View
-                    key={i}
-                    style={[
-                      s.strengthBar,
-                      {
-                        backgroundColor:
-                          password.length >= i * 3
-                            ? i <= 1 ? '#EF4444' : i <= 2 ? '#F59E0B' : i <= 3 ? '#6366F1' : '#00C9A7'
-                            : 'rgba(255, 255, 255, 0.1)',
-                      },
-                    ]}
-                  />
-                ))}
-                <Text style={s.strengthLabel}>
-                  {password.length < 4 ? 'Weak' : password.length < 7 ? 'Fair' : password.length < 10 ? 'Good' : 'Strong'}
-                </Text>
-              </View>
-            )}
-
-            {/* Submit CTA */}
-            <Animated.View style={[{ transform: [{ scale: btnScale }] }, { marginTop: 10 }]}>
-              <TouchableOpacity
-                style={[s.signInBtn, loading && { opacity: 0.75 }]}
-                onPress={handleRegister}
-                onPressIn={pressIn}
-                onPressOut={pressOut}
-                disabled={loading}
-                activeOpacity={0.9}
+            <View style={[s.cardWrapper, isDesktop && s.cardWrapperDesktop]}>
+              <View
+                style={[
+                  s.card,
+                  isDesktop && s.cardDesktop,
+                  Platform.OS === 'web'
+                    ? ({
+                        backdropFilter: 'blur(28px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+                        boxShadow:
+                          '0 0 50px rgba(0, 223, 178, 0.16), 0 30px 60px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                      } as any)
+                    : null,
+                ]}
               >
-                <Text style={s.signInText}>
-                  {loading ? 'Creating account...' : 'Create Account  →'}
+                {/* Header */}
+                <View style={s.brandRow}>
+                  <View style={s.logoBadge}>
+                    <Text style={s.logoIcon}>📖</Text>
+                  </View>
+                  <View>
+                    <Text style={s.brandTitle}>StudyFlow</Text>
+                    <Text style={s.brandSubtitle}>AI-Powered Learning</Text>
+                  </View>
+                </View>
+
+                <View style={s.welcomeBox}>
+                  <Text style={s.welcomeHeading}>Create Account ✨</Text>
+                  <Text style={s.welcomeSub}>Start your AI-powered study journey today</Text>
+                </View>
+
+                <GlassInput
+                  label="Full Name"
+                  placeholder="John Doe"
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                  icon="👤"
+                />
+                <GlassInput
+                  label="Email Address"
+                  placeholder="student@example.com"
+                  keyboardType="email-address"
+                  value={email}
+                  onChangeText={setEmail}
+                  icon="✉️"
+                />
+                <GlassInput
+                  label="Password"
+                  placeholder="Minimum 6 characters"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                  icon="🔒"
+                />
+                <GlassInput
+                  label="Confirm Password"
+                  placeholder="Re-enter your password"
+                  secureTextEntry
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  icon="🔑"
+                />
+
+                {/* Password strength */}
+                {password.length > 0 && (
+                  <View style={s.strengthRow}>
+                    {[1, 2, 3, 4].map((i) => (
+                      <View
+                        key={i}
+                        style={[
+                          s.strengthBar,
+                          {
+                            backgroundColor:
+                              password.length >= i * 3
+                                ? i <= 1 ? '#EF4444' : i <= 2 ? '#F59E0B' : i <= 3 ? '#6366F1' : '#00DFB2'
+                                : 'rgba(255, 255, 255, 0.1)',
+                          },
+                        ]}
+                      />
+                    ))}
+                    <Text style={s.strengthLabel}>
+                      {password.length < 4 ? 'Weak' : password.length < 7 ? 'Fair' : password.length < 10 ? 'Good' : 'Strong'}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Submit CTA */}
+                <Animated.View style={[{ transform: [{ scale: btnScale }] }, { marginTop: 10 }]}>
+                  <TouchableOpacity
+                    style={[s.ctaButton, loading && { opacity: 0.75 }]}
+                    onPress={handleRegister}
+                    onPressIn={pressIn}
+                    onPressOut={pressOut}
+                    disabled={loading}
+                    activeOpacity={0.9}
+                  >
+                    <Text style={s.ctaText}>
+                      {loading ? 'Creating account...' : 'Create Account  →'}
+                    </Text>
+                  </TouchableOpacity>
+                </Animated.View>
+
+                {/* Terms */}
+                <Text style={s.terms}>
+                  By signing up you agree to our{' '}
+                  <Text style={{ color: '#00DFB2' }}>Terms</Text> &{' '}
+                  <Text style={{ color: '#00DFB2' }}>Privacy Policy</Text>.
                 </Text>
-              </TouchableOpacity>
-            </Animated.View>
 
-            {/* Terms */}
-            <Text style={s.terms}>
-              By signing up you agree to our{' '}
-              <Text style={{ color: '#00C9A7' }}>Terms</Text> &{' '}
-              <Text style={{ color: '#00C9A7' }}>Privacy Policy</Text>.
-            </Text>
+                {/* Divider */}
+                <View style={s.dividerContainer}>
+                  <View style={s.dividerBar} />
+                  <Text style={s.dividerLabel}>or</Text>
+                  <View style={s.dividerBar} />
+                </View>
 
-            {/* Divider */}
-            <View style={s.dividerRow}>
-              <View style={s.dividerLine} />
-              <Text style={s.dividerText}>or</Text>
-              <View style={s.dividerLine} />
+                {/* Login Link */}
+                <TouchableOpacity
+                  style={s.createAccountRow}
+                  onPress={() => router.push('/(auth)/login')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.createAccountText}>
+                    Already have an account?{' '}
+                    <Text style={s.createAccountHighlight}>Sign In</Text>
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-
-            {/* Login Link */}
-            <TouchableOpacity
-              style={s.createAccountBtn}
-              onPress={() => router.push('/(auth)/login')}
-              activeOpacity={0.7}
-            >
-              <Text style={s.createAccountText}>
-                Already have an account?{' '}
-                <Text style={s.createAccountHighlight}>Sign In</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
+  bgImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#060A10',
+  },
+  darkBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(6, 10, 16, 0.45)',
+  },
   safe: {
     flex: 1,
-    backgroundColor: '#060A10',
   },
   scroll: {
     flexGrow: 1,
@@ -303,87 +346,80 @@ const s = StyleSheet.create({
   },
   scrollDesktop: {
     paddingVertical: 48,
-    paddingHorizontal: 48,
+    paddingHorizontal: 64,
   },
-  bgGlowTopLeft: {
-    position: 'absolute',
-    top: -120,
-    left: -120,
-    width: 450,
-    height: 450,
-    borderRadius: 225,
-    backgroundColor: 'rgba(0, 201, 167, 0.08)',
+  cardWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  bgGlowBottomRight: {
-    position: 'absolute',
-    bottom: -100,
-    right: -100,
-    width: 550,
-    height: 550,
-    borderRadius: 275,
-    backgroundColor: 'rgba(0, 201, 167, 0.14)',
+  cardWrapperDesktop: {
+    width: '100%',
+    maxWidth: 1200,
+    alignItems: 'flex-start',
+    paddingLeft: 60,
   },
 
   card: {
     width: '100%',
     maxWidth: 480,
-    backgroundColor: 'rgba(12, 20, 34, 0.78)',
-    borderRadius: 26,
-    borderWidth: 1.2,
-    borderColor: 'rgba(0, 201, 167, 0.25)',
-    paddingHorizontal: 28,
-    paddingVertical: 34,
-    shadowColor: '#00C9A7',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
+    backgroundColor: 'rgba(10, 20, 34, 0.65)',
+    borderRadius: 28,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 229, 187, 0.35)',
+    paddingHorizontal: 32,
+    paddingVertical: 36,
+    shadowColor: '#00DFB2',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
     shadowRadius: 35,
-    elevation: 10,
+    elevation: 12,
   },
   cardDesktop: {
-    width: 520,
-    maxWidth: 540,
+    width: 480,
+    maxWidth: 500,
     paddingHorizontal: 36,
     paddingVertical: 38,
   },
 
-  brandHeader: {
+  brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
     marginBottom: 20,
   },
-  logoSquare: {
+  logoBadge: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#00C9A7',
+    backgroundColor: '#00DFB2',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#00C9A7',
+    shadowColor: '#00DFB2',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  logoBookIcon: {
+  logoIcon: {
     fontSize: 22,
   },
   brandTitle: {
     color: '#FFFFFF',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
   },
   brandSubtitle: {
-    color: '#00C9A7',
+    color: '#00DFB2',
     fontSize: 12,
     fontWeight: '600',
     marginTop: 2,
   },
 
-  welcomeWrap: {
-    marginBottom: 22,
+  welcomeBox: {
+    marginBottom: 20,
   },
-  welcomeTitle: {
+  welcomeHeading: {
     color: '#FFFFFF',
     fontSize: 24,
     fontWeight: '800',
@@ -412,7 +448,7 @@ const s = StyleSheet.create({
     width: 45,
   },
 
-  signInBtn: {
+  ctaButton: {
     backgroundColor: '#00DFB2',
     borderRadius: 14,
     paddingVertical: 16,
@@ -420,11 +456,11 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     shadowColor: '#00DFB2',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 18,
-    elevation: 8,
+    shadowOpacity: 0.55,
+    shadowRadius: 20,
+    elevation: 10,
   },
-  signInText: {
+  ctaText: {
     color: '#05131C',
     fontWeight: '800',
     fontSize: 16,
@@ -439,24 +475,24 @@ const s = StyleSheet.create({
     lineHeight: 18,
   },
 
-  dividerRow: {
+  dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 18,
     gap: 14,
   },
-  dividerLine: {
+  dividerBar: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
-  dividerText: {
+  dividerLabel: {
     color: '#64748B',
     fontSize: 13,
     fontWeight: '500',
   },
 
-  createAccountBtn: {
+  createAccountRow: {
     alignItems: 'center',
     paddingVertical: 4,
   },
@@ -466,7 +502,7 @@ const s = StyleSheet.create({
     fontWeight: '500',
   },
   createAccountHighlight: {
-    color: '#00C9A7',
+    color: '#00DFB2',
     fontWeight: '700',
   },
 });

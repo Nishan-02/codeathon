@@ -11,12 +11,13 @@ import {
   useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
+  ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../hooks/useAuth';
 
-// ── Fancy Glass Input Component ─────────────────────────────────────────────
+// ── Glass Input Field ────────────────────────────────────────────────────────
 function GlassInput({
   label,
   placeholder,
@@ -42,10 +43,20 @@ function GlassInput({
   return (
     <View style={gi.wrap}>
       <Text style={gi.label}>{label}</Text>
-      <View style={[gi.row, focused && gi.rowFocused]}>
+      <View style={[gi.box, focused && gi.boxFocused]}>
         <Text style={gi.icon}>{icon}</Text>
         <TextInput
-          style={[gi.input, Platform.OS === 'web' ? ({ outline: 'none' } as any) : null]}
+          style={[
+            gi.input,
+            Platform.OS === 'web'
+              ? ({
+                  outline: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#FFFFFF',
+                  WebkitBoxShadow: '0 0 0 1000px transparent inset',
+                } as any)
+              : null,
+          ]}
           placeholder={placeholder}
           placeholderTextColor="#5C6E82"
           value={value}
@@ -60,7 +71,8 @@ function GlassInput({
           <TouchableOpacity
             onPress={() => setShowPwd((v) => !v)}
             style={gi.eyeBtn}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.7}
           >
             <Text style={gi.eyeIcon}>{showPwd ? '🙈' : '👁️'}</Text>
           </TouchableOpacity>
@@ -77,298 +89,44 @@ const gi = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     marginBottom: 8,
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
   },
-  row: {
+  box: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(13, 22, 38, 0.75)',
+    backgroundColor: 'rgba(15, 25, 42, 0.72)',
     borderRadius: 14,
     borderWidth: 1.2,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     paddingHorizontal: 16,
-    gap: 12,
     height: 52,
+    gap: 12,
   },
-  rowFocused: {
-    borderColor: '#00C9A7',
-    backgroundColor: 'rgba(15, 28, 48, 0.9)',
-    shadowColor: '#00C9A7',
+  boxFocused: {
+    borderColor: '#00DFB2',
+    backgroundColor: 'rgba(18, 32, 54, 0.88)',
+    shadowColor: '#00DFB2',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.4,
     shadowRadius: 10,
-    elevation: 3,
+    elevation: 4,
   },
   icon: { fontSize: 16, opacity: 0.9 },
   input: {
     flex: 1,
     color: '#FFFFFF',
     fontSize: 14.5,
-    fontWeight: '400',
+    backgroundColor: 'transparent',
     height: '100%',
+    padding: 0,
   },
   eyeBtn: { padding: 4 },
   eyeIcon: { color: '#94A3B8', fontSize: 16 },
 });
 
-// ── Right-Side Futuristic Education Illustration (Desktop Only) ──────────────
-function EducationIllustration() {
-  return (
-    <View style={ill.container}>
-      {/* Ambient background glow behind illustration */}
-      <View style={[ill.ambientGlow, Platform.OS === 'web' ? ({ filter: 'blur(70px)' } as any) : null]} />
-
-      {/* Floating Holographic Cards */}
-      <View style={[ill.holoCard, ill.holoCap]}>
-        <Text style={ill.holoIcon}>🎓</Text>
-      </View>
-
-      <View style={[ill.holoCard, ill.holoBrain]}>
-        <Text style={ill.holoIcon}>🧠</Text>
-      </View>
-
-      <View style={[ill.holoCard, ill.holoVideo]}>
-        <Text style={ill.holoIcon}>▶️</Text>
-      </View>
-
-      <View style={[ill.holoCard, ill.holoNotes]}>
-        <View style={ill.notesLines}>
-          <View style={[ill.noteLine, { width: 28 }]} />
-          <View style={[ill.noteLine, { width: 20 }]} />
-          <View style={[ill.noteLine, { width: 24 }]} />
-        </View>
-      </View>
-
-      {/* Floating glowing orbs */}
-      <View style={[ill.orb, ill.orb1]} />
-      <View style={[ill.orb, ill.orb2]} />
-      <View style={[ill.orb, ill.orb3]} />
-
-      {/* Glowing Open Book & Stack */}
-      <View style={ill.bookStack}>
-        {/* Open Book with Glowing Pages */}
-        <View style={ill.openBookWrapper}>
-          <View style={[ill.openBookGlow, Platform.OS === 'web' ? ({ filter: 'blur(30px)' } as any) : null]} />
-          <View style={ill.openBook}>
-            <View style={ill.bookPageLeft}>
-              <View style={ill.pageLine} />
-              <View style={ill.pageLine} />
-              <View style={ill.pageLine} />
-            </View>
-            <View style={ill.bookSpineGlow} />
-            <View style={ill.bookPageRight}>
-              <View style={ill.pageLine} />
-              <View style={ill.pageLine} />
-              <View style={ill.pageLine} />
-            </View>
-          </View>
-        </View>
-
-        {/* Stack Layer 1 */}
-        <View style={ill.bookBottom1}>
-          <View style={ill.bookSpine} />
-          <View style={ill.bookPagesEdge} />
-        </View>
-
-        {/* Stack Layer 2 */}
-        <View style={ill.bookBottom2}>
-          <View style={[ill.bookSpine, { backgroundColor: '#0D2235' }]} />
-          <View style={ill.bookPagesEdge} />
-        </View>
-
-        {/* Cyber perspective floor reflection */}
-        <View style={ill.gridFloor} />
-      </View>
-    </View>
-  );
-}
-
-const ill = StyleSheet.create({
-  container: {
-    width: 440,
-    height: 480,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    marginLeft: 32,
-  },
-  ambientGlow: {
-    position: 'absolute',
-    width: 380,
-    height: 380,
-    borderRadius: 190,
-    backgroundColor: 'rgba(0, 201, 167, 0.12)',
-  },
-  holoCard: {
-    position: 'absolute',
-    backgroundColor: 'rgba(10, 25, 40, 0.75)',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: 'rgba(0, 201, 167, 0.45)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#00C9A7',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 14,
-    elevation: 6,
-  },
-  holoIcon: { fontSize: 26 },
-  holoCap: {
-    top: 24,
-    right: 50,
-    width: 68,
-    height: 68,
-  },
-  holoBrain: {
-    top: 100,
-    right: 0,
-    width: 64,
-    height: 64,
-  },
-  holoVideo: {
-    top: 120,
-    left: 40,
-    width: 60,
-    height: 60,
-  },
-  holoNotes: {
-    top: 190,
-    right: 28,
-    width: 58,
-    height: 58,
-    padding: 12,
-  },
-  notesLines: { gap: 4, width: '100%' },
-  noteLine: { height: 3, backgroundColor: '#00C9A7', borderRadius: 2, opacity: 0.8 },
-
-  orb: {
-    position: 'absolute',
-    borderRadius: 99,
-    backgroundColor: '#00C9A7',
-    shadowColor: '#00C9A7',
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-  },
-  orb1: { width: 14, height: 14, top: 110, left: 16, opacity: 0.8 },
-  orb2: { width: 20, height: 20, top: 190, left: 18, opacity: 0.9 },
-  orb3: { width: 10, height: 10, top: 70, right: 140, opacity: 0.6 },
-
-  bookStack: {
-    position: 'absolute',
-    bottom: 30,
-    alignItems: 'center',
-  },
-  openBookWrapper: {
-    position: 'relative',
-    zIndex: 10,
-    marginBottom: -12,
-  },
-  openBookGlow: {
-    position: 'absolute',
-    width: 220,
-    height: 120,
-    top: -20,
-    left: -10,
-    backgroundColor: 'rgba(0, 201, 167, 0.35)',
-    borderRadius: 99,
-  },
-  openBook: {
-    flexDirection: 'row',
-    width: 200,
-    height: 70,
-    backgroundColor: '#0F2A38',
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: '#00C9A7',
-    overflow: 'hidden',
-    shadowColor: '#00C9A7',
-    shadowOpacity: 0.6,
-    shadowRadius: 18,
-    elevation: 8,
-  },
-  bookPageLeft: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 201, 167, 0.15)',
-    padding: 10,
-    gap: 6,
-    borderRightWidth: 1,
-    borderRightColor: '#00C9A7',
-    transform: [{ skewY: '-6deg' }],
-  },
-  bookPageRight: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 201, 167, 0.15)',
-    padding: 10,
-    gap: 6,
-    transform: [{ skewY: '6deg' }],
-  },
-  bookSpineGlow: {
-    width: 2,
-    backgroundColor: '#00DFB2',
-    height: '100%',
-  },
-  pageLine: {
-    height: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    borderRadius: 2,
-    width: '85%',
-  },
-  bookBottom1: {
-    width: 240,
-    height: 36,
-    backgroundColor: '#0E1F30',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 201, 167, 0.4)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    marginBottom: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
-  },
-  bookBottom2: {
-    width: 260,
-    height: 40,
-    backgroundColor: '#091522',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 201, 167, 0.3)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-  },
-  bookSpine: {
-    width: 24,
-    height: '70%',
-    backgroundColor: '#00C9A7',
-    borderRadius: 3,
-    opacity: 0.8,
-  },
-  bookPagesEdge: {
-    flex: 1,
-    height: '60%',
-    marginLeft: 8,
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  gridFloor: {
-    width: 320,
-    height: 30,
-    marginTop: 10,
-    borderTopWidth: 1,
-    borderColor: 'rgba(0, 201, 167, 0.2)',
-    opacity: 0.7,
-  },
-});
-
-// ── Main Login Screen ─────────────────────────────────────────────────────────
+// ── Main Screen Component ───────────────────────────────────────────────────
 export default function LoginScreen() {
-  const [email, setEmail] = useState('sharsha0333@gmail.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -377,7 +135,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
-  const isDesktop = width >= 960;
+  const isDesktop = width >= 900;
 
   const btnScale = useRef(new Animated.Value(1)).current;
   const pressIn = () => Animated.spring(btnScale, { toValue: 0.97, useNativeDriver: true }).start();
@@ -400,138 +158,165 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
-      {/* Atmospheric Background Effects */}
-      <View style={[s.bgGlowTopLeft, Platform.OS === 'web' ? ({ filter: 'blur(90px)' } as any) : null]} />
-      <View style={[s.bgGlowBottomRight, Platform.OS === 'web' ? ({ filter: 'blur(100px)' } as any) : null]} />
-      <View style={s.bgWaveLeft} />
+    <ImageBackground
+      source={require('../../assets/images/login-bg.png')}
+      style={s.bgImage}
+      resizeMode="cover"
+    >
+      {/* Dark overlay for optimal text contrast and neon ambience */}
+      <View style={s.darkBackdrop} />
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={[
-            s.scroll,
-            isDesktop && s.scrollDesktop,
-          ]}
-          keyboardShouldPersistTaps="handled"
+      <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={[s.layoutContainer, isDesktop && s.layoutContainerDesktop]}>
-            {/* ── Glassmorphism Login Card ────────────────────────────────────── */}
-            <View
-              style={[
-                s.card,
-                isDesktop && s.cardDesktop,
-                Platform.OS === 'web' ? ({ backdropFilter: 'blur(24px)' } as any) : null,
-              ]}
-            >
-              {/* Brand Header */}
-              <View style={s.brandHeader}>
-                <View style={s.logoSquare}>
-                  <Text style={s.logoBookIcon}>📖</Text>
-                </View>
-                <View>
-                  <Text style={s.brandTitle}>StudyFlow</Text>
-                  <Text style={s.brandSubtitle}>AI-Powered Learning</Text>
-                </View>
-              </View>
-
-              {/* Welcome Titles */}
-              <View style={s.welcomeWrap}>
-                <Text style={s.welcomeTitle}>Welcome back 👋</Text>
-                <Text style={s.welcomeSub}>Sign in to continue your learning journey</Text>
-              </View>
-
-              {/* Inputs */}
-              <GlassInput
-                label="Email Address"
-                placeholder="Enter your email address"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-                icon="✉️"
-              />
-
-              <GlassInput
-                label="Password"
-                placeholder="Enter your password"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-                icon="🔒"
-              />
-
-              {/* Remember Me & Forgot Password */}
-              <View style={s.optionsRow}>
-                <TouchableOpacity
-                  style={s.rememberMeRow}
-                  onPress={() => setRememberMe(!rememberMe)}
-                  activeOpacity={0.8}
-                >
-                  <View style={[s.checkbox, rememberMe && s.checkboxChecked]}>
-                    {rememberMe && <Text style={s.checkMark}>✓</Text>}
+          <ScrollView
+            contentContainerStyle={[
+              s.scroll,
+              isDesktop && s.scrollDesktop,
+            ]}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={[s.cardWrapper, isDesktop && s.cardWrapperDesktop]}>
+              {/* ── Center Glassmorphism Login Card ─────────────────────────── */}
+              <View
+                style={[
+                  s.card,
+                  isDesktop && s.cardDesktop,
+                  Platform.OS === 'web'
+                    ? ({
+                        backdropFilter: 'blur(28px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+                        boxShadow:
+                          '0 0 50px rgba(0, 223, 178, 0.16), 0 30px 60px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                      } as any)
+                    : null,
+                ]}
+              >
+                {/* Brand Header: Logo + Title */}
+                <View style={s.brandRow}>
+                  <View style={s.logoBadge}>
+                    <Text style={s.logoIcon}>📖</Text>
                   </View>
-                  <Text style={s.rememberText}>Remember me</Text>
-                </TouchableOpacity>
+                  <View>
+                    <Text style={s.brandTitle}>StudyFlow</Text>
+                    <Text style={s.brandSubtitle}>AI-Powered Learning</Text>
+                  </View>
+                </View>
 
+                {/* Welcome section */}
+                <View style={s.welcomeBox}>
+                  <Text style={s.welcomeHeading}>Welcome back 👋</Text>
+                  <Text style={s.welcomeSub}>Sign in to continue your learning journey</Text>
+                </View>
+
+                {/* Email Address */}
+                <GlassInput
+                  label="Email Address"
+                  placeholder="Enter your email address"
+                  keyboardType="email-address"
+                  value={email}
+                  onChangeText={setEmail}
+                  icon="✉️"
+                />
+
+                {/* Password */}
+                <GlassInput
+                  label="Password"
+                  placeholder="Enter your password"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                  icon="🔒"
+                />
+
+                {/* Remember Me + Forgot Password */}
+                <View style={s.metaRow}>
+                  <TouchableOpacity
+                    style={s.rememberRow}
+                    onPress={() => setRememberMe(!rememberMe)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[s.checkbox, rememberMe && s.checkboxChecked]}>
+                      {rememberMe && <Text style={s.checkmarkText}>✓</Text>}
+                    </View>
+                    <Text style={s.rememberLabel}>Remember me</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() =>
+                      Alert.alert(
+                        'Forgot Password',
+                        'Password reset instructions have been sent to your email.'
+                      )
+                    }
+                    activeOpacity={0.7}
+                  >
+                    <Text style={s.forgotLink}>Forgot password?</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Sign In CTA Button */}
+                <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                  <TouchableOpacity
+                    style={[s.ctaButton, loading && { opacity: 0.75 }]}
+                    onPress={handleLogin}
+                    onPressIn={pressIn}
+                    onPressOut={pressOut}
+                    disabled={loading}
+                    activeOpacity={0.9}
+                  >
+                    <Text style={s.ctaText}>
+                      {loading ? 'Signing in...' : 'Sign In  →'}
+                    </Text>
+                  </TouchableOpacity>
+                </Animated.View>
+
+                {/* Divider */}
+                <View style={s.dividerContainer}>
+                  <View style={s.dividerBar} />
+                  <Text style={s.dividerLabel}>or</Text>
+                  <View style={s.dividerBar} />
+                </View>
+
+                {/* Create Account Link */}
                 <TouchableOpacity
-                  onPress={() => Alert.alert('Forgot Password', 'Password reset instructions have been sent to your email.')}
+                  style={s.createAccountRow}
+                  onPress={() => router.push('/(auth)/register')}
                   activeOpacity={0.7}
                 >
-                  <Text style={s.forgotText}>Forgot password?</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Sign In CTA Button */}
-              <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                <TouchableOpacity
-                  style={[s.signInBtn, loading && { opacity: 0.75 }]}
-                  onPress={handleLogin}
-                  onPressIn={pressIn}
-                  onPressOut={pressOut}
-                  disabled={loading}
-                  activeOpacity={0.9}
-                >
-                  <Text style={s.signInText}>
-                    {loading ? 'Signing in...' : 'Sign In  →'}
+                  <Text style={s.createAccountText}>
+                    New here?{' '}
+                    <Text style={s.createAccountHighlight}>Create account</Text>
                   </Text>
                 </TouchableOpacity>
-              </Animated.View>
-
-              {/* Divider */}
-              <View style={s.dividerRow}>
-                <View style={s.dividerLine} />
-                <Text style={s.dividerText}>or</Text>
-                <View style={s.dividerLine} />
               </View>
-
-              {/* Create Account Link */}
-              <TouchableOpacity
-                style={s.createAccountBtn}
-                onPress={() => router.push('/(auth)/register')}
-                activeOpacity={0.7}
-              >
-                <Text style={s.createAccountText}>
-                  New here?{' '}
-                  <Text style={s.createAccountHighlight}>Create account</Text>
-                </Text>
-              </TouchableOpacity>
             </View>
-
-            {/* ── Right-Side Futuristic Education Illustration (Desktop) ─────── */}
-            {isDesktop && <EducationIllustration />}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
+  bgImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#060A10',
+  },
+  darkBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(6, 10, 16, 0.45)',
+  },
   safe: {
     flex: 1,
-    backgroundColor: '#060A10',
   },
   scroll: {
     flexGrow: 1,
@@ -542,120 +327,87 @@ const s = StyleSheet.create({
   },
   scrollDesktop: {
     paddingVertical: 48,
-    paddingHorizontal: 48,
+    paddingHorizontal: 64,
   },
-
-  // Atmospheric background elements
-  bgGlowTopLeft: {
-    position: 'absolute',
-    top: -120,
-    left: -120,
-    width: 450,
-    height: 450,
-    borderRadius: 225,
-    backgroundColor: 'rgba(0, 201, 167, 0.08)',
-  },
-  bgGlowBottomRight: {
-    position: 'absolute',
-    bottom: -100,
-    right: -100,
-    width: 550,
-    height: 550,
-    borderRadius: 275,
-    backgroundColor: 'rgba(0, 201, 167, 0.14)',
-  },
-  bgWaveLeft: {
-    position: 'absolute',
-    bottom: 60,
-    left: -60,
-    width: 320,
-    height: 160,
-    borderRadius: 160,
-    borderTopWidth: 2,
-    borderColor: 'rgba(0, 201, 167, 0.25)',
-    transform: [{ rotate: '-15deg' }],
-  },
-
-  layoutContainer: {
+  cardWrapper: {
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  layoutContainerDesktop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    maxWidth: 1100,
-    gap: 40,
+  cardWrapperDesktop: {
+    width: '100%',
+    maxWidth: 1200,
+    alignItems: 'flex-start',
+    paddingLeft: 60,
   },
 
-  // Center Glass Card
+  // Glassmorphism Center Card
   card: {
     width: '100%',
     maxWidth: 480,
-    backgroundColor: 'rgba(12, 20, 34, 0.78)',
-    borderRadius: 26,
-    borderWidth: 1.2,
-    borderColor: 'rgba(0, 201, 167, 0.25)',
-    paddingHorizontal: 28,
-    paddingVertical: 34,
-    shadowColor: '#00C9A7',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
+    backgroundColor: 'rgba(10, 20, 34, 0.65)',
+    borderRadius: 28,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 229, 187, 0.35)',
+    paddingHorizontal: 32,
+    paddingVertical: 36,
+    shadowColor: '#00DFB2',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
     shadowRadius: 35,
-    elevation: 10,
+    elevation: 12,
   },
   cardDesktop: {
-    width: 500,
-    maxWidth: 520,
+    width: 480,
+    maxWidth: 500,
     paddingHorizontal: 36,
     paddingVertical: 40,
   },
 
   // Brand Header
-  brandHeader: {
+  brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    marginBottom: 24,
+    marginBottom: 22,
   },
-  logoSquare: {
+  logoBadge: {
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: '#00C9A7',
+    backgroundColor: '#00DFB2',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#00C9A7',
+    shadowColor: '#00DFB2',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  logoBookIcon: {
+  logoIcon: {
     fontSize: 24,
   },
   brandTitle: {
     color: '#FFFFFF',
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   brandSubtitle: {
-    color: '#00C9A7',
+    color: '#00DFB2',
     fontSize: 12.5,
     fontWeight: '600',
     marginTop: 2,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
 
   // Welcome section
-  welcomeWrap: {
-    marginBottom: 26,
+  welcomeBox: {
+    marginBottom: 24,
   },
-  welcomeTitle: {
+  welcomeHeading: {
     color: '#FFFFFF',
-    fontSize: 26,
+    fontSize: 27,
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 6,
@@ -667,14 +419,14 @@ const s = StyleSheet.create({
   },
 
   // Options row
-  optionsRow: {
+  metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 4,
     marginBottom: 24,
   },
-  rememberMeRow: {
+  rememberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -690,27 +442,27 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: '#00C9A7',
-    borderColor: '#00C9A7',
+    backgroundColor: '#00DFB2',
+    borderColor: '#00DFB2',
   },
-  checkMark: {
-    color: '#060A10',
+  checkmarkText: {
+    color: '#05131C',
     fontSize: 12,
     fontWeight: '900',
   },
-  rememberText: {
+  rememberLabel: {
     color: '#94A3B8',
     fontSize: 13,
     fontWeight: '500',
   },
-  forgotText: {
-    color: '#00C9A7',
+  forgotLink: {
+    color: '#00DFB2',
     fontSize: 13,
     fontWeight: '600',
   },
 
-  // Sign In CTA
-  signInBtn: {
+  // CTA Button
+  ctaButton: {
     backgroundColor: '#00DFB2',
     borderRadius: 14,
     paddingVertical: 16,
@@ -718,11 +470,11 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     shadowColor: '#00DFB2',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 18,
-    elevation: 8,
+    shadowOpacity: 0.55,
+    shadowRadius: 20,
+    elevation: 10,
   },
-  signInText: {
+  ctaText: {
     color: '#05131C',
     fontWeight: '800',
     fontSize: 16,
@@ -730,25 +482,25 @@ const s = StyleSheet.create({
   },
 
   // Divider
-  dividerRow: {
+  dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 22,
     gap: 14,
   },
-  dividerLine: {
+  dividerBar: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
-  dividerText: {
+  dividerLabel: {
     color: '#64748B',
     fontSize: 13,
     fontWeight: '500',
   },
 
-  // Create Account
-  createAccountBtn: {
+  // Create account
+  createAccountRow: {
     alignItems: 'center',
     paddingVertical: 4,
   },
@@ -758,7 +510,7 @@ const s = StyleSheet.create({
     fontWeight: '500',
   },
   createAccountHighlight: {
-    color: '#00C9A7',
+    color: '#00DFB2',
     fontWeight: '700',
   },
 });
