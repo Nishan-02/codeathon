@@ -1,14 +1,10 @@
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-
+from app.database.database import engine, Base
 from app.core.config import settings
-from app.core.firebase import initialize_firebase
-from app.database.database import Base
-from app.database.session import engine
 
-# Import models to ensure metadata registered
+# Import all models to ensure SQLAlchemy metadata is registered
 import app.models  # noqa: F401
 
 # Import routers
@@ -20,62 +16,58 @@ from app.routers import (
     assignments,
     planner,
     progress,
-    ai
+    ai,
+    rag,
 )
+from app.core.core_tracker import router as core_tracker_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup tasks
-    logger.info("Initializing database tables...")
-    try:
-        Base.metadata.create_all(bind=engine)
-        logger.info("Database tables created successfully.")
-    except Exception as e:
-        logger.warning(f"Database connection/table creation notice: {e}")
-
-    logger.info("Initializing Firebase Admin...")
-    initialize_firebase()
-    yield
-    # Shutdown tasks
-    logger.info("Shutting down application...")
-
+# Generate database tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    lifespan=lifespan
+    title="Intelligent Study Planner API",
+    description="Backend service for tracking study progress, RAG generation, and ML analytics.",
+    version="1.0.0",
 )
 
-# CORS middleware
-if settings.CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount all routers under /api for frontend compatibility
+app.include_router(users.router, prefix="/api")
+app.include_router(subjects.router, prefix="/api")
+app.include_router(topics.router, prefix="/api")
+app.include_router(exams.router, prefix="/api")
+app.include_router(assignments.router, prefix="/api")
+app.include_router(planner.router, prefix="/api")
+app.include_router(progress.router, prefix="/api")
+app.include_router(ai.router, prefix="/api")
+app.include_router(rag.router, prefix="/api")
+
+# Core tracker and ML routes (already prefixed with /api)
+app.include_router(core_tracker_router)
+
+# Also mount progress, topics, and rag directly
+app.include_router(topics.router)
+app.include_router(progress.router)
+app.include_router(rag.router)
 
 
-# Health Check
+@app.get("/health", tags=["Health"])
 @app.get("/api/health", tags=["Health"])
 def health_check():
-    return {"status": "ok"}
-
-
-# Include API Routers
-app.include_router(users.router, prefix=settings.API_V1_STR)
-app.include_router(subjects.router, prefix=settings.API_V1_STR)
-app.include_router(topics.router, prefix=settings.API_V1_STR)
-app.include_router(exams.router, prefix=settings.API_V1_STR)
-app.include_router(assignments.router, prefix=settings.API_V1_STR)
-app.include_router(planner.router, prefix=settings.API_V1_STR)
-app.include_router(progress.router, prefix=settings.API_V1_STR)
-app.include_router(ai.router, prefix=settings.API_V1_STR)
+    return {
+        "status": "online",
+        "message": "Intelligent Study Planner API is running",
+    }
 
 
 if __name__ == "__main__":

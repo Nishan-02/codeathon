@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     FIREBASE_CLIENT_EMAIL: str = ""
     FIREBASE_PRIVATE_KEY: str = ""
     
-    # OpenRouter / AI Configuration
+    # Gemini / AI Configuration
+    GEMINI_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
     OPENROUTER_MODEL: str = "openrouter/free"
     

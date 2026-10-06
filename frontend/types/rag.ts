@@ -58,3 +58,20 @@ export interface RAGStatusResponse {
   chunks_count?: number;
   has_study_plan?: boolean;
 }
+
+export interface GeneratedFileAsset {
+  file_id: string;
+  title: string;
+  file_type: 'flashcards' | 'notes' | 'glossary' | 'mindmap' | 'exam' | string;
+  extension: string;
+  content: string;
+  summary: string;
+}
+
+export interface GeneratedFilesBundleResponse {
+  success: boolean;
+  document_id: string;
+  filename: string;
+  files: GeneratedFileAsset[];
+}
+
