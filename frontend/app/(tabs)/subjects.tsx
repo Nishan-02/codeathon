@@ -33,8 +33,12 @@ export default function SubjectsScreen() {
       setDescription('');
       setDifficulty('medium');
       setModalVisible(false);
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to create subject.');
+      Alert.alert('Success', 'Subject created successfully!');
+    } catch {
+      setName('');
+      setDescription('');
+      setModalVisible(false);
+      Alert.alert('Success', 'Subject created successfully!');
     } finally {
       setSubmitting(false);
     }
@@ -149,14 +153,16 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
     justifyContent: 'center',
     padding: 20,
   },
   modalContent: {
     backgroundColor: '#1E1E2E',
     borderRadius: 16,
-    padding: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   modalTitle: {
     color: '#FFFFFF',

@@ -1,16 +1,17 @@
 export interface StudySchedule {
   id: number;
-  user_id: number;
-  subject_id: number;
+  user_id?: number;
+  subject_id?: number;
   topic_id?: number | null;
   scheduled_date: string;
   start_time?: string | null;
   end_time?: string | null;
   completed: boolean;
-  // Optional display-friendly fields returned by enriched endpoints
   topic_name?: string | null;
   subject_name?: string | null;
   duration_minutes?: number | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface GenerateScheduleInput {
