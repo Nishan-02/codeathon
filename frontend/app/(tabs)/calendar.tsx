@@ -12,6 +12,7 @@ import {
   Modal,
   StatusBar,
   RefreshControl,
+  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -233,275 +234,303 @@ export default function CalendarScreen() {
     .join('');
 
   return (
-    <SafeAreaView style={s.safe} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#070D18" />
+    <ImageBackground
+      source={require('../../assets/images/calendar-bg.jpg')}
+      style={s.bgImage}
+      resizeMode="cover"
+    >
+      <View style={s.bgOverlay} />
+      <SafeAreaView style={s.safe} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor="#070D18" />
 
-      {/* ── Toast Banner ── */}
-      {toastMessage && (
-        <View style={s.toastBanner}>
-          <Text style={s.toastText}>{toastMessage}</Text>
-        </View>
-      )}
-
-      <View style={s.pageWrapper}>
-        {/* ══════════════════════════════════════════════════════════════════════
-            1. LEFT SIDEBAR (Desktop)
-        ══════════════════════════════════════════════════════════════════════ */}
-        {isDesktop && (
-          <View style={s.sidebar}>
-            {/* Logo */}
-            <TouchableOpacity
-              style={s.sidebarLogo}
-              onPress={() => router.push('/(tabs)')}
-              activeOpacity={0.8}
-            >
-              <View style={s.logoSquare}>
-                <Text style={s.logoIcon}>📖</Text>
-              </View>
-              <View>
-                <Text style={s.logoTitle}>StudyFlow</Text>
-                <Text style={s.logoSubtitle}>AI-Powered Learning</Text>
-              </View>
-            </TouchableOpacity>
-
-            {/* Nav Menu */}
-            <View style={s.navMenu}>
-              <TouchableOpacity
-                style={s.navItem}
-                onPress={() => router.push('/(tabs)')}
-                activeOpacity={0.7}
-              >
-                <Text style={s.navIcon}>🏠</Text>
-                <Text style={s.navLabel}>Today</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={s.navItem}
-                onPress={() => router.push('/(tabs)/subjects')}
-                activeOpacity={0.7}
-              >
-                <Text style={s.navIcon}>📚</Text>
-                <Text style={s.navLabel}>Subjects</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={s.navItem}
-                onPress={() => router.push('/(tabs)/planner')}
-                activeOpacity={0.7}
-              >
-                <Text style={s.navIcon}>⚡</Text>
-                <Text style={s.navLabel}>Planner</Text>
-              </TouchableOpacity>
-
-              {/* Active Tab: Calendar */}
-              <TouchableOpacity
-                style={[s.navItem, s.navItemActive]}
-                activeOpacity={0.9}
-              >
-                <Text style={[s.navIcon, s.navIconActive]}>📅</Text>
-                <Text style={[s.navLabel, s.navLabelActive]}>Calendar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={s.navItem}
-                onPress={() => router.push('/(tabs)/progress')}
-                activeOpacity={0.7}
-              >
-                <Text style={s.navIcon}>📊</Text>
-                <Text style={s.navLabel}>Progress</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={s.navItem}
-                onPress={() => router.push('/(tabs)/profile')}
-                activeOpacity={0.7}
-              >
-                <Text style={s.navIcon}>👤</Text>
-                <Text style={s.navLabel}>Profile</Text>
-              </TouchableOpacity>
-            </View>
+        {/* ── Toast Floating Banner ── */}
+        {toastMessage && (
+          <View style={s.toastBanner}>
+            <Text style={s.toastText}>{toastMessage}</Text>
           </View>
         )}
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            2. MAIN CONTENT AREA
-        ══════════════════════════════════════════════════════════════════════ */}
-        <View style={s.mainArea}>
-          {/* Top Search & Profile Bar */}
-          <View style={s.topBar}>
-            {/* Search Input */}
-            <View style={s.searchWrap}>
-              <Text style={s.searchIcon}>🔍</Text>
-              <TextInput
-                style={s.searchInput}
-                placeholder="Search subjects, exams, assignments..."
-                placeholderTextColor="#64748B"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <Text style={s.clearSearch}>✕</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {/* Quick Actions Right */}
-            <View style={s.topBarRight}>
+        <View style={s.pageWrapper}>
+          {/* ══════════════════════════════════════════════════════════════════════
+              1. LEFT SIDEBAR (Desktop only)
+          ══════════════════════════════════════════════════════════════════════ */}
+          {isDesktop && (
+            <View style={s.sidebar}>
               <TouchableOpacity
-                style={s.iconBtn}
-                onPress={() => showToast('Dark Cyber Theme is active 🌙')}
-                activeOpacity={0.7}
-              >
-                <Text style={s.iconBtnText}>🌙</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={s.iconBtn}
-                onPress={() => showToast('You have 2 upcoming deadlines this week! 🔔')}
-                activeOpacity={0.7}
-              >
-                <Text style={s.iconBtnText}>🔔</Text>
-                <View style={s.notifDot} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={s.userAvatar}
-                onPress={() => router.push('/(tabs)/profile')}
+                style={s.sidebarLogo}
+                onPress={() => router.push('/(tabs)')}
                 activeOpacity={0.8}
               >
-                <Text style={s.userAvatarText}>{initials}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Scrollable Main Content */}
-          <ScrollView
-            style={s.scroll}
-            contentContainerStyle={s.content}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={() => {
-                  setRefreshing(true);
-                  loadData();
-                }}
-                tintColor="#00DFB2"
-              />
-            }
-          >
-            <View style={s.innerContainer}>
-              {/* ── Page Header Row ── */}
-              <View style={s.pageHeader}>
-                <View style={s.pageHeaderLeft}>
-                  <View style={s.headerIconBox}>
-                    <Text style={s.headerEmoji}>📅</Text>
-                  </View>
-                  <View>
-                    <View style={s.headerTitleRow}>
-                      <Text style={s.pageTitle}>Academic Timetable & </Text>
-                      <Text style={[s.pageTitle, { color: '#00DFB2' }]}>Calendar</Text>
-                    </View>
-                    <Text style={s.pageSubtitle}>
-                      Stay organized with your exams, assignments and schedule.
-                    </Text>
-                  </View>
+                <View style={s.logoSquare}>
+                  <Text style={s.logoIcon}>📖</Text>
                 </View>
+                <View>
+                  <Text style={s.logoTitle}>StudyFlow</Text>
+                  <Text style={s.logoSubtitle}>AI-Powered Learning</Text>
+                </View>
+              </TouchableOpacity>
 
-                {/* + Add Event Button */}
+              <View style={s.navMenu}>
                 <TouchableOpacity
-                  style={s.addEventBtn}
-                  onPress={() => setAddModalVisible(true)}
-                  activeOpacity={0.85}
+                  style={s.navItem}
+                  onPress={() => router.push('/(tabs)')}
+                  activeOpacity={0.7}
                 >
-                  <Text style={s.addEventIcon}>＋</Text>
-                  <Text style={s.addEventText}>Add Event</Text>
+                  <Text style={s.navIcon}>🏠</Text>
+                  <Text style={s.navLabel}>Today</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={s.navItem}
+                  onPress={() => router.push('/(tabs)/subjects')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.navIcon}>📚</Text>
+                  <Text style={s.navLabel}>Subjects</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={s.navItem}
+                  onPress={() => router.push('/(tabs)/planner')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.navIcon}>⚡</Text>
+                  <Text style={s.navLabel}>Planner</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[s.navItem, s.navItemActive]}
+                  activeOpacity={0.9}
+                >
+                  <Text style={[s.navIcon, s.navIconActive]}>📅</Text>
+                  <Text style={[s.navLabel, s.navLabelActive]}>Calendar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={s.navItem}
+                  onPress={() => router.push('/(tabs)/progress')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.navIcon}>📊</Text>
+                  <Text style={s.navLabel}>Progress</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={s.navItem}
+                  onPress={() => router.push('/(tabs)/profile')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.navIcon}>👤</Text>
+                  <Text style={s.navLabel}>Profile</Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          )}
 
-              {/* ══════════════════════════════════════════════════════════════
-                  CARD 1: UPCOMING EXAMS
-              ══════════════════════════════════════════════════════════════ */}
-              <View style={s.sectionCard}>
-                {/* Section Header */}
-                <View style={s.cardHeader}>
-                  <View style={s.cardHeaderLeft}>
-                    <View style={s.sectionIconBox}>
-                      <Text style={s.sectionIconEmoji}>📅</Text>
+          {/* ══════════════════════════════════════════════════════════════════════
+              2. MAIN AREA
+          ══════════════════════════════════════════════════════════════════════ */}
+          <View style={s.mainArea}>
+            {/* Top Bar */}
+            <View style={[s.topBar, !isDesktop && s.topBarMobile]}>
+              {/* Mobile Brand Row */}
+              {!isDesktop && (
+                <View style={s.mobileBrandRow}>
+                  <View style={s.mobileLogoGroup}>
+                    <View style={s.logoSquareSmall}>
+                      <Text style={{ fontSize: 16 }}>📖</Text>
                     </View>
-                    <View>
-                      <Text style={s.sectionTitle}>Upcoming Exams</Text>
-                      <Text style={s.sectionSub}>Your scheduled examinations</Text>
-                    </View>
+                    <Text style={s.mobileBrandText}>StudyFlow</Text>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => router.push('/(tabs)/planner')}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={s.viewAllLink}>View All →</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Exam Items */}
-                {filteredExams.length === 0 ? (
-                  <View style={s.emptyBox}>
-                    <Text style={s.emptyText}>No matching upcoming exams found.</Text>
-                  </View>
-                ) : (
-                  filteredExams.map((exam) => (
+                  <View style={s.mobileActionGroup}>
                     <TouchableOpacity
-                      key={`exam-${exam.id}`}
-                      style={s.itemRow}
-                      activeOpacity={0.8}
-                      onPress={() =>
-                        setSelectedItem({
-                          type: 'exam',
-                          id: exam.id,
-                          title: exam.title,
-                          date: exam.exam_date,
-                          status: 'Upcoming',
-                        })
-                      }
+                      style={s.iconBtnSmall}
+                      onPress={() => showToast('Dark theme is active 🌙')}
                     >
-                      {/* Left Red Vertical Accent Stripe */}
-                      <View style={s.examStripe} />
-
-                      {/* Left Icon */}
-                      <View style={s.examIconBox}>
-                        <Text style={s.examEmoji}>📄</Text>
-                      </View>
-
-                      {/* Content Info */}
-                      <View style={s.itemContent}>
-                        <Text style={s.itemTitle} numberOfLines={1}>
-                          {exam.title}
-                        </Text>
-                        <View style={s.dateRow}>
-                          <Text style={s.dateEmoji}>📅</Text>
-                          <Text style={s.dateText}>{formatDateStr(exam.exam_date)}</Text>
-                        </View>
-                      </View>
-
-                      {/* Right Badge & Chevron */}
-                      <View style={s.itemRight}>
-                        <View style={s.examBadge}>
-                          <Text style={s.examBadgeText}>Upcoming</Text>
-                        </View>
-                        <Text style={s.chevron}>›</Text>
-                      </View>
+                      <Text style={{ fontSize: 14 }}>🌙</Text>
                     </TouchableOpacity>
-                  ))
+                    <TouchableOpacity
+                      style={s.iconBtnSmall}
+                      onPress={() => showToast('2 upcoming deadlines 🔔')}
+                    >
+                      <Text style={{ fontSize: 14 }}>🔔</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={s.avatarSmall}
+                      onPress={() => router.push('/(tabs)/profile')}
+                    >
+                      <Text style={s.avatarSmallText}>{initials}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {/* Search Bar */}
+              <View style={[s.searchWrap, !isDesktop && s.searchWrapMobile]}>
+                <Text style={s.searchIcon}>🔍</Text>
+                <TextInput
+                  style={s.searchInput}
+                  placeholder="Search subjects, exams, assignments..."
+                  placeholderTextColor="#64748B"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <Text style={s.clearSearch}>✕</Text>
+                  </TouchableOpacity>
                 )}
               </View>
 
-              {/* ══════════════════════════════════════════════════════════════
-                  CARD 2: ASSIGNMENT DEADLINES
-              ══════════════════════════════════════════════════════════════ */}
-              <View style={s.sectionCard}>
-                {/* Section Header */}
-                <View style={s.cardHeader}>
-                  <View style={s.cardHeaderLeft}>
+              {/* Desktop Top Right Icons */}
+              {isDesktop && (
+                <View style={s.topBarRight}>
+                  <TouchableOpacity
+                    style={s.iconBtn}
+                    onPress={() => showToast('Dark Cyber Theme is active 🌙')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={s.iconBtnText}>🌙</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={s.iconBtn}
+                    onPress={() => showToast('You have 2 upcoming deadlines this week! 🔔')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={s.iconBtnText}>🔔</Text>
+                    <View style={s.notifDot} />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={s.userAvatar}
+                    onPress={() => router.push('/(tabs)/profile')}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={s.userAvatarText}>{initials}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            {/* Scrollable Content */}
+            <ScrollView
+              style={s.scroll}
+              contentContainerStyle={[
+                s.content,
+                !isDesktop && s.contentMobile,
+              ]}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={() => {
+                    setRefreshing(true);
+                    loadData();
+                  }}
+                  tintColor="#00DFB2"
+                />
+              }
+            >
+              <View style={[s.innerContainer, !isDesktop && s.innerContainerMobile]}>
+                {/* ── Page Header Row ── */}
+                <View style={[s.pageHeader, !isDesktop && s.pageHeaderMobile]}>
+                  <View style={s.pageHeaderLeft}>
+                    <View style={s.headerIconBox}>
+                      <Text style={s.headerEmoji}>📅</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={s.headerTitleRow}>
+                        <Text style={[s.pageTitle, !isDesktop && s.pageTitleMobile]}>
+                          Academic Timetable &{' '}
+                        </Text>
+                        <Text style={[s.pageTitle, { color: '#00DFB2' }, !isDesktop && s.pageTitleMobile]}>
+                          Calendar
+                        </Text>
+                      </View>
+                      <Text style={s.pageSubtitle}>
+                        Stay organized with your exams and assignments.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[s.addEventBtn, !isDesktop && s.addEventBtnMobile]}
+                    onPress={() => setAddModalVisible(true)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={s.addEventIcon}>＋</Text>
+                    <Text style={s.addEventText}>Add Event</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* ── CARD 1: UPCOMING EXAMS ── */}
+                <View style={[s.sectionCard, !isDesktop && s.sectionCardMobile]}>
+                  <View style={s.cardHeader}>
+                    <View style={s.cardHeaderLeft}>
+                      <View style={s.sectionIconBox}>
+                        <Text style={s.sectionIconEmoji}>📅</Text>
+                      </View>
+                      <View>
+                        <Text style={s.sectionTitle}>Upcoming Exams</Text>
+                        <Text style={s.sectionSub}>Your scheduled examinations</Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => router.push('/(tabs)/planner')}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={s.viewAllLink}>View All →</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {filteredExams.length === 0 ? (
+                    <View style={s.emptyBox}>
+                      <Text style={s.emptyText}>No matching upcoming exams found.</Text>
+                    </View>
+                  ) : (
+                    filteredExams.map((exam) => (
+                      <TouchableOpacity
+                        key={`exam-${exam.id}`}
+                        style={[s.itemRow, !isDesktop && s.itemRowMobile]}
+                        activeOpacity={0.8}
+                        onPress={() =>
+                          setSelectedItem({
+                            type: 'exam',
+                            id: exam.id,
+                            title: exam.title,
+                            date: exam.exam_date,
+                            status: 'Upcoming',
+                          })
+                        }
+                      >
+                        <View style={s.examStripe} />
+                        <View style={s.examIconBox}>
+                          <Text style={s.examEmoji}>📄</Text>
+                        </View>
+                        <View style={s.itemContent}>
+                          <Text style={[s.itemTitle, !isDesktop && s.itemTitleMobile]} numberOfLines={1}>
+                            {exam.title}
+                          </Text>
+                          <View style={s.dateRow}>
+                            <Text style={s.dateEmoji}>📅</Text>
+                            <Text style={s.dateText}>{formatDateStr(exam.exam_date)}</Text>
+                          </View>
+                        </View>
+                        <View style={s.itemRight}>
+                          <View style={s.examBadge}>
+                            <Text style={s.examBadgeText}>Upcoming</Text>
+                          </View>
+                          <Text style={s.chevron}>›</Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))
+                  )}
+                </View>
+
+                {/* ── CARD 2: ASSIGNMENT DEADLINES ── */}
+                <View style={[s.sectionCard, !isDesktop && s.sectionCardMobile]}>
+                  <View style={s.cardHeader}>
                     <View style={[s.sectionIconBox, { backgroundColor: 'rgba(0, 223, 178, 0.12)' }]}>
                       <Text style={s.sectionIconEmoji}>🕒</Text>
                     </View>
@@ -518,7 +547,6 @@ export default function CalendarScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Assignment Items */}
                 {filteredAssignments.length === 0 ? (
                   <View style={s.emptyBox}>
                     <Text style={s.emptyText}>No matching assignment deadlines found.</Text>
@@ -527,7 +555,7 @@ export default function CalendarScreen() {
                   filteredAssignments.map((assignment) => (
                     <TouchableOpacity
                       key={`assign-${assignment.id}`}
-                      style={s.itemRow}
+                      style={[s.itemRow, !isDesktop && s.itemRowMobile]}
                       activeOpacity={0.8}
                       onPress={() =>
                         setSelectedItem({
@@ -539,17 +567,12 @@ export default function CalendarScreen() {
                         })
                       }
                     >
-                      {/* Left Amber Vertical Accent Stripe */}
                       <View style={s.assignStripe} />
-
-                      {/* Left Icon */}
                       <View style={s.assignIconBox}>
                         <Text style={s.assignEmoji}>📄</Text>
                       </View>
-
-                      {/* Content Info */}
                       <View style={s.itemContent}>
-                        <Text style={s.itemTitle} numberOfLines={1}>
+                        <Text style={[s.itemTitle, !isDesktop && s.itemTitleMobile]} numberOfLines={1}>
                           {assignment.title}
                         </Text>
                         <View style={s.dateRow}>
@@ -557,8 +580,6 @@ export default function CalendarScreen() {
                           <Text style={s.dateText}>Due: {formatDateStr(assignment.due_date)}</Text>
                         </View>
                       </View>
-
-                      {/* Right Badge & Chevron */}
                       <View style={s.itemRight}>
                         <View style={s.assignBadge}>
                           <Text style={s.assignBadgeText}>
@@ -572,202 +593,203 @@ export default function CalendarScreen() {
                 )}
               </View>
 
-              <View style={{ height: 40 }} />
-            </View>
-          </ScrollView>
-        </View>
-      </View>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          ADD EVENT MODAL
-      ══════════════════════════════════════════════════════════════════════ */}
-      <Modal
-        visible={addModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setAddModalVisible(false)}
-      >
-        <View style={s.modalOverlay}>
-          <View style={s.modalCard}>
-            <Text style={s.modalTitle}>✨ Add Academic Event</Text>
-            <Text style={s.modalSub}>Schedule an upcoming exam or assignment deadline</Text>
-
-            {/* Type Selector Tabs */}
-            <View style={s.tabSelector}>
-              <TouchableOpacity
-                style={[s.tabBtn, eventType === 'exam' && s.tabBtnActive]}
-                onPress={() => setEventType('exam')}
-              >
-                <Text style={[s.tabBtnText, eventType === 'exam' && s.tabBtnTextActive]}>
-                  📝 Exam
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[s.tabBtn, eventType === 'assignment' && s.tabBtnActive]}
-                onPress={() => setEventType('assignment')}
-              >
-                <Text style={[s.tabBtnText, eventType === 'assignment' && s.tabBtnTextActive]}>
-                  ⏳ Assignment
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Event Title */}
-            <View style={s.inputWrap}>
-              <Text style={s.inputLabel}>
-                {eventType === 'exam' ? 'Exam Title *' : 'Assignment Title *'}
-              </Text>
-              <TextInput
-                style={s.modalInput}
-                value={newTitle}
-                onChangeText={setNewTitle}
-                placeholder={
-                  eventType === 'exam'
-                    ? 'e.g. Operating Systems Final Exam'
-                    : 'e.g. Problem Set #5: Binary Trees'
-                }
-                placeholderTextColor="#64748B"
-              />
-            </View>
-
-            {/* Date */}
-            <View style={s.inputWrap}>
-              <Text style={s.inputLabel}>
-                {eventType === 'exam' ? 'Exam Date (YYYY-MM-DD)' : 'Due Date (YYYY-MM-DD)'}
-              </Text>
-              <TextInput
-                style={s.modalInput}
-                value={newDate}
-                onChangeText={setNewDate}
-                placeholder="2026-11-15"
-                placeholderTextColor="#64748B"
-              />
-            </View>
-
-            {/* Notes / Description */}
-            <View style={s.inputWrap}>
-              <Text style={s.inputLabel}>Description / Topics Covered</Text>
-              <TextInput
-                style={s.modalInput}
-                value={newDesc}
-                onChangeText={setNewDesc}
-                placeholder="e.g. Chapters 1-4, Weightage 25%"
-                placeholderTextColor="#64748B"
-              />
-            </View>
-
-            {/* Modal Buttons */}
-            <View style={s.modalBtnRow}>
-              <TouchableOpacity
-                style={s.modalCancelBtn}
-                onPress={() => setAddModalVisible(false)}
-                disabled={creating}
-              >
-                <Text style={s.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={s.modalSaveBtn}
-                onPress={handleCreateEvent}
-                disabled={creating}
-              >
-                {creating ? (
-                  <ActivityIndicator color="#072B28" />
-                ) : (
-                  <Text style={s.modalSaveText}>
-                    {eventType === 'exam' ? 'Schedule Exam' : 'Add Assignment'}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
+              <View style={{ height: 48 }} />
+            </ScrollView>
           </View>
         </View>
-      </Modal>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          ITEM DETAILS & ACTIONS MODAL
-      ══════════════════════════════════════════════════════════════════════ */}
-      {selectedItem && (
+        {/* ── Add Event Modal ── */}
         <Modal
-          visible={Boolean(selectedItem)}
+          visible={addModalVisible}
           transparent
           animationType="fade"
-          onRequestClose={() => setSelectedItem(null)}
+          onRequestClose={() => setAddModalVisible(false)}
         >
           <View style={s.modalOverlay}>
             <View style={s.modalCard}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <View
-                  style={[
-                    s.sectionIconBox,
-                    {
-                      backgroundColor:
-                        selectedItem.type === 'exam'
-                          ? 'rgba(239, 68, 68, 0.15)'
-                          : 'rgba(245, 158, 11, 0.15)',
-                    },
-                  ]}
+              <Text style={s.modalTitle}>✨ Add Academic Event</Text>
+              <Text style={s.modalSub}>Schedule an upcoming exam or assignment deadline</Text>
+
+              <View style={s.tabSelector}>
+                <TouchableOpacity
+                  style={[s.tabBtn, eventType === 'exam' && s.tabBtnActive]}
+                  onPress={() => setEventType('exam')}
                 >
-                  <Text style={{ fontSize: 18 }}>
-                    {selectedItem.type === 'exam' ? '📝' : '⏳'}
+                  <Text style={[s.tabBtnText, eventType === 'exam' && s.tabBtnTextActive]}>
+                    📝 Exam
                   </Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.modalTitle} numberOfLines={2}>
-                    {selectedItem.title}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.tabBtn, eventType === 'assignment' && s.tabBtnActive]}
+                  onPress={() => setEventType('assignment')}
+                >
+                  <Text style={[s.tabBtnText, eventType === 'assignment' && s.tabBtnTextActive]}>
+                    ⏳ Assignment
                   </Text>
-                  <Text style={s.modalSub}>
-                    {selectedItem.type === 'exam' ? 'Scheduled Examination' : 'Academic Assignment'}
-                  </Text>
-                </View>
+                </TouchableOpacity>
               </View>
 
-              <View style={s.detailInfoCard}>
-                <View style={s.detailInfoRow}>
-                  <Text style={s.detailInfoLabel}>Date / Due:</Text>
-                  <Text style={s.detailInfoVal}>{formatDateStr(selectedItem.date)}</Text>
-                </View>
-                <View style={s.detailInfoRow}>
-                  <Text style={s.detailInfoLabel}>Status:</Text>
-                  <Text
-                    style={[
-                      s.detailInfoVal,
-                      { color: selectedItem.type === 'exam' ? '#F87171' : '#FBBF24' },
-                    ]}
-                  >
-                    {selectedItem.status || 'Active'}
-                  </Text>
-                </View>
+              <View style={s.inputWrap}>
+                <Text style={s.inputLabel}>
+                  {eventType === 'exam' ? 'Exam Title *' : 'Assignment Title *'}
+                </Text>
+                <TextInput
+                  style={s.modalInput}
+                  value={newTitle}
+                  onChangeText={setNewTitle}
+                  placeholder={
+                    eventType === 'exam'
+                      ? 'e.g. Operating Systems Final Exam'
+                      : 'e.g. Problem Set #5: Binary Trees'
+                  }
+                  placeholderTextColor="#64748B"
+                />
+              </View>
+
+              <View style={s.inputWrap}>
+                <Text style={s.inputLabel}>
+                  {eventType === 'exam' ? 'Exam Date (YYYY-MM-DD)' : 'Due Date (YYYY-MM-DD)'}
+                </Text>
+                <TextInput
+                  style={s.modalInput}
+                  value={newDate}
+                  onChangeText={setNewDate}
+                  placeholder="2026-11-15"
+                  placeholderTextColor="#64748B"
+                />
+              </View>
+
+              <View style={s.inputWrap}>
+                <Text style={s.inputLabel}>Description / Topics Covered</Text>
+                <TextInput
+                  style={s.modalInput}
+                  value={newDesc}
+                  onChangeText={setNewDesc}
+                  placeholder="e.g. Chapters 1-4, Weightage 25%"
+                  placeholderTextColor="#64748B"
+                />
               </View>
 
               <View style={s.modalBtnRow}>
                 <TouchableOpacity
-                  style={[s.modalCancelBtn, { borderColor: 'rgba(239, 68, 68, 0.3)' }]}
-                  onPress={handleDeleteItem}
+                  style={s.modalCancelBtn}
+                  onPress={() => setAddModalVisible(false)}
+                  disabled={creating}
                 >
-                  <Text style={[s.modalCancelText, { color: '#EF4444' }]}>Delete</Text>
+                  <Text style={s.modalCancelText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={s.modalSaveBtn}
-                  onPress={() => {
-                    showToast('Event details synced ✨');
-                    setSelectedItem(null);
-                  }}
+                  onPress={handleCreateEvent}
+                  disabled={creating}
                 >
-                  <Text style={s.modalSaveText}>Close</Text>
+                  {creating ? (
+                    <ActivityIndicator color="#072B28" />
+                  ) : (
+                    <Text style={s.modalSaveText}>
+                      {eventType === 'exam' ? 'Schedule Exam' : 'Add Assignment'}
+                    </Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </Modal>
-      )}
-    </SafeAreaView>
+
+        {/* ── Item Details Modal ── */}
+        {selectedItem && (
+          <Modal
+            visible={Boolean(selectedItem)}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setSelectedItem(null)}
+          >
+            <View style={s.modalOverlay}>
+              <View style={s.modalCard}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <View
+                    style={[
+                      s.sectionIconBox,
+                      {
+                        backgroundColor:
+                          selectedItem.type === 'exam'
+                            ? 'rgba(239, 68, 68, 0.15)'
+                            : 'rgba(245, 158, 11, 0.15)',
+                      },
+                    ]}
+                  >
+                    <Text style={{ fontSize: 18 }}>
+                      {selectedItem.type === 'exam' ? '📝' : '⏳'}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.modalTitle} numberOfLines={2}>
+                      {selectedItem.title}
+                    </Text>
+                    <Text style={s.modalSub}>
+                      {selectedItem.type === 'exam' ? 'Scheduled Examination' : 'Academic Assignment'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={s.detailInfoCard}>
+                  <View style={s.detailInfoRow}>
+                    <Text style={s.detailInfoLabel}>Date / Due:</Text>
+                    <Text style={s.detailInfoVal}>{formatDateStr(selectedItem.date)}</Text>
+                  </View>
+                  <View style={s.detailInfoRow}>
+                    <Text style={s.detailInfoLabel}>Status:</Text>
+                    <Text
+                      style={[
+                        s.detailInfoVal,
+                        { color: selectedItem.type === 'exam' ? '#F87171' : '#FBBF24' },
+                      ]}
+                    >
+                      {selectedItem.status || 'Active'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={s.modalBtnRow}>
+                  <TouchableOpacity
+                    style={[s.modalCancelBtn, { borderColor: 'rgba(239, 68, 68, 0.3)' }]}
+                    onPress={handleDeleteItem}
+                  >
+                    <Text style={[s.modalCancelText, { color: '#EF4444' }]}>Delete</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={s.modalSaveBtn}
+                    onPress={() => {
+                      showToast('Event details synced ✨');
+                      setSelectedItem(null);
+                    }}
+                  >
+                    <Text style={s.modalSaveText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )}
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const s = StyleSheet.create({
+  bgImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#070D18',
+  },
+  bgOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(4, 9, 18, 0.45)',
+  },
   safe: {
     flex: 1,
-    backgroundColor: '#070D18',
+    backgroundColor: 'transparent',
   },
   pageWrapper: {
     flex: 1,
@@ -801,11 +823,17 @@ const s = StyleSheet.create({
   // ── Sidebar (Desktop) ─────────────────────────────────────────────────────
   sidebar: {
     width: 230,
-    backgroundColor: '#09121F',
+    backgroundColor: 'rgba(7, 14, 26, 0.75)',
     borderRightWidth: 1,
-    borderRightColor: 'rgba(255, 255, 255, 0.08)',
+    borderRightColor: 'rgba(0, 223, 178, 0.15)',
     paddingTop: 20,
     paddingHorizontal: 16,
+    ...(Platform.OS === 'web'
+      ? ({
+          backdropFilter: 'blur(24px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+        } as any)
+      : {}),
   },
   sidebarLogo: {
     flexDirection: 'row',
@@ -860,7 +888,7 @@ const s = StyleSheet.create({
       : {}),
   },
   navItemActive: {
-    backgroundColor: 'rgba(0, 223, 178, 0.1)',
+    backgroundColor: 'rgba(0, 223, 178, 0.12)',
     borderColor: '#00DFB2',
   },
   navIcon: {
@@ -882,7 +910,7 @@ const s = StyleSheet.create({
   // ── Main Area ─────────────────────────────────────────────────────────────
   mainArea: {
     flex: 1,
-    backgroundColor: '#070D18',
+    backgroundColor: 'transparent',
   },
   topBar: {
     height: 64,
@@ -892,20 +920,88 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#09121F',
+    backgroundColor: 'rgba(7, 14, 26, 0.65)',
+    ...(Platform.OS === 'web'
+      ? ({
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        } as any)
+      : {}),
+  },
+  topBarMobile: {
+    height: 'auto',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 10,
+    gap: 10,
+  },
+  mobileBrandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  mobileLogoGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoSquareSmall: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#00DFB2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mobileBrandText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  mobileActionGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconBtnSmall: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarSmall: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#00DFB2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarSmallText: {
+    color: '#072B28',
+    fontWeight: '800',
+    fontSize: 13,
   },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(12, 22, 38, 0.8)',
+    backgroundColor: 'rgba(12, 22, 38, 0.85)',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     paddingHorizontal: 12,
     height: 38,
     width: '100%',
     maxWidth: 380,
     gap: 8,
+  },
+  searchWrapMobile: {
+    maxWidth: '100%',
+    height: 36,
   },
   searchIcon: {
     fontSize: 14,
@@ -970,9 +1066,17 @@ const s = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
   },
+  contentMobile: {
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 32,
+  },
   innerContainer: {
     width: '100%',
     maxWidth: 1040,
+  },
+  innerContainerMobile: {
+    maxWidth: '100%',
   },
 
   // ── Page Header ───────────────────────────────────────────────────────────
@@ -980,41 +1084,52 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 20,
     flexWrap: 'wrap',
     gap: 14,
+  },
+  pageHeaderMobile: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 16,
   },
   pageHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
+    flex: 1,
   },
   headerIconBox: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 223, 178, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 223, 178, 0.3)',
+    backgroundColor: 'rgba(0, 223, 178, 0.15)',
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 223, 178, 0.35)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerEmoji: {
-    fontSize: 22,
+    fontSize: 20,
   },
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   pageTitle: {
     color: '#FFFFFF',
-    fontSize: 21,
+    fontSize: 20,
     fontWeight: '800',
     letterSpacing: -0.3,
   },
+  pageTitleMobile: {
+    fontSize: 17,
+  },
   pageSubtitle: {
     color: '#8E9BAE',
-    fontSize: 13,
+    fontSize: 12.5,
     marginTop: 2,
   },
   addEventBtn: {
@@ -1036,6 +1151,11 @@ const s = StyleSheet.create({
         } as any)
       : {}),
   },
+  addEventBtnMobile: {
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
   addEventIcon: {
     color: '#072B28',
     fontSize: 15,
@@ -1047,73 +1167,80 @@ const s = StyleSheet.create({
     fontWeight: '800',
   },
 
-  // ── Section Card (Glowing Container) ──────────────────────────────────────
+  // ── Section Card (Glowing Glass Container) ────────────────────────────────
   sectionCard: {
-    backgroundColor: '#0B1526',
+    backgroundColor: 'rgba(10, 20, 36, 0.72)',
     borderRadius: 18,
     borderWidth: 1.2,
-    borderColor: 'rgba(0, 223, 178, 0.22)',
+    borderColor: 'rgba(0, 223, 178, 0.28)',
     padding: 20,
-    marginBottom: 22,
+    marginBottom: 20,
     ...(Platform.OS === 'web'
       ? ({
-          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.45)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.55), 0 0 25px rgba(0, 223, 178, 0.08)',
         } as any)
       : {}),
+  },
+  sectionCardMobile: {
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 16,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
-    paddingBottom: 12,
+    marginBottom: 14,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.06)',
   },
   cardHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   sectionIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     backgroundColor: 'rgba(0, 223, 178, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   sectionIconEmoji: {
-    fontSize: 17,
+    fontSize: 16,
   },
   sectionTitle: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     letterSpacing: -0.2,
   },
   sectionSub: {
     color: '#8E9BAE',
-    fontSize: 12,
+    fontSize: 11.5,
     marginTop: 1,
   },
   viewAllLink: {
     color: '#00DFB2',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
   },
 
   // ── Item Row ──────────────────────────────────────────────────────────────
   itemRow: {
-    backgroundColor: '#08101E',
+    backgroundColor: 'rgba(7, 15, 28, 0.85)',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: 13,
+    paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 9,
     position: 'relative',
     overflow: 'hidden',
     ...(Platform.OS === 'web'
@@ -1122,6 +1249,10 @@ const s = StyleSheet.create({
           transition: 'all 0.15s ease',
         } as any)
       : {}),
+  },
+  itemRowMobile: {
+    paddingVertical: 11,
+    paddingHorizontal: 12,
   },
   examStripe: {
     position: 'absolute',
@@ -1140,72 +1271,76 @@ const s = StyleSheet.create({
     backgroundColor: '#F59E0B',
   },
   examIconBox: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: 8,
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
-    marginLeft: 6,
+    marginRight: 10,
+    marginLeft: 4,
   },
   examEmoji: {
-    fontSize: 16,
+    fontSize: 15,
   },
   assignIconBox: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: 8,
     backgroundColor: 'rgba(245, 158, 11, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(245, 158, 11, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
-    marginLeft: 6,
+    marginRight: 10,
+    marginLeft: 4,
   },
   assignEmoji: {
-    fontSize: 16,
+    fontSize: 15,
   },
   itemContent: {
     flex: 1,
+    marginRight: 8,
   },
   itemTitle: {
     color: '#FFFFFF',
-    fontSize: 14.5,
+    fontSize: 14,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 3,
+  },
+  itemTitleMobile: {
+    fontSize: 13,
   },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
   dateEmoji: {
-    fontSize: 12,
+    fontSize: 11,
   },
   dateText: {
     color: '#8E9BAE',
-    fontSize: 12.5,
+    fontSize: 11.5,
   },
   itemRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
   examBadge: {
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.35)',
     borderRadius: 99,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
   },
   examBadgeText: {
     color: '#F87171',
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: '700',
   },
   assignBadge: {
@@ -1213,26 +1348,26 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(245, 158, 11, 0.35)',
     borderRadius: 99,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
   },
   assignBadgeText: {
     color: '#FBBF24',
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: '700',
   },
   chevron: {
     color: '#64748B',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
   },
   emptyBox: {
-    paddingVertical: 20,
+    paddingVertical: 18,
     alignItems: 'center',
   },
   emptyText: {
     color: '#64748B',
-    fontSize: 13,
+    fontSize: 12.5,
     fontStyle: 'italic',
   },
 
@@ -1242,7 +1377,7 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.78)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 16,
     zIndex: 1000,
   },
   modalCard: {
@@ -1252,7 +1387,7 @@ const s = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1.2,
     borderColor: 'rgba(0, 223, 178, 0.35)',
-    padding: 24,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.6,
@@ -1261,21 +1396,21 @@ const s = StyleSheet.create({
   },
   modalTitle: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
   },
   modalSub: {
     color: '#8E9BAE',
-    fontSize: 13,
-    marginTop: 3,
-    marginBottom: 16,
+    fontSize: 12.5,
+    marginTop: 2,
+    marginBottom: 14,
   },
   tabSelector: {
     flexDirection: 'row',
     backgroundColor: '#070D18',
     borderRadius: 10,
     padding: 4,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   tabBtn: {
     flex: 1,
@@ -1290,7 +1425,7 @@ const s = StyleSheet.create({
   },
   tabBtnText: {
     color: '#8E9BAE',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '600',
   },
   tabBtnTextActive: {
@@ -1298,34 +1433,34 @@ const s = StyleSheet.create({
     fontWeight: '700',
   },
   inputWrap: {
-    marginBottom: 14,
+    marginBottom: 12,
   },
   inputLabel: {
     color: '#CBD5E1',
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 6,
+    marginBottom: 5,
   },
   modalInput: {
     backgroundColor: '#070D18',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13.5,
     ...(Platform.OS === 'web' ? ({ outline: 'none' } as any) : {}),
   },
   modalBtnRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     justifyContent: 'flex-end',
-    marginTop: 8,
+    marginTop: 6,
   },
   modalCancelBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
     borderRadius: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
@@ -1333,25 +1468,25 @@ const s = StyleSheet.create({
   },
   modalCancelText: {
     color: '#CBD5E1',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '600',
   },
   modalSaveBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
     borderRadius: 8,
     backgroundColor: '#00DFB2',
   },
   modalSaveText: {
     color: '#072B28',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
   },
   detailInfoCard: {
     backgroundColor: '#070D18',
     borderRadius: 10,
-    padding: 14,
-    marginBottom: 18,
+    padding: 12,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     gap: 8,
@@ -1363,11 +1498,11 @@ const s = StyleSheet.create({
   },
   detailInfoLabel: {
     color: '#8E9BAE',
-    fontSize: 13,
+    fontSize: 12.5,
   },
   detailInfoVal: {
     color: '#FFFFFF',
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: '700',
   },
 });
