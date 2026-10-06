@@ -1,8 +1,8 @@
 export interface StudySchedule {
-  id: number;
-  user_id?: number;
-  subject_id?: number;
-  topic_id?: number | null;
+  id: string | number;
+  user_id?: string | number;
+  subject_id?: string | number;
+  topic_id?: string | number | null;
   scheduled_date: string;
   start_time?: string | null;
   end_time?: string | null;
@@ -21,8 +21,8 @@ export interface GenerateScheduleInput {
 }
 
 export interface UpdateScheduleInput {
-  subject_id?: number;
-  topic_id?: number;
+  subject_id?: string | number;
+  topic_id?: string | number;
   scheduled_date?: string;
   start_time?: string;
   end_time?: string;

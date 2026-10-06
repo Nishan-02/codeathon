@@ -1,7 +1,12 @@
-import { apiFetch } from './api';
+import {
+  getProgress,
+  getSubjectProgress,
+  calculateAndSaveProgress,
+} from '../lib/firebase/firestore';
 import { OverallProgress, SubjectProgress } from '../types/progress';
 
 export const ProgressService = {
-  getOverallProgress: () => apiFetch<OverallProgress>('/progress'),
-  getSubjectProgress: (subjectId: number) => apiFetch<SubjectProgress>(`/progress/${subjectId}`),
+  getOverallProgress: () => getProgress(),
+  getSubjectProgress: (subjectId: string | number) => getSubjectProgress(subjectId),
+  recalculate: () => calculateAndSaveProgress(),
 };

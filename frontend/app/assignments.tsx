@@ -8,8 +8,10 @@ import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { formatDate } from '../utils/helpers';
+import { useAuth } from '../hooks/useAuth';
 
 export default function AssignmentsScreen() {
+  const { user } = useAuth();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(false);
@@ -17,10 +19,11 @@ export default function AssignmentsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | number | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const loadData = async () => {
+    if (!user) return;
     try {
       setLoading(true);
       const [a, s] = await Promise.all([
@@ -43,13 +46,13 @@ export default function AssignmentsScreen() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]);
 
   const handleOpenModal = () => {
     if (subjects.length > 0) {
       setSelectedSubjectId(subjects[0].id);
     } else {
-      setSelectedSubjectId(1);
+      setSelectedSubjectId('general');
     }
     setModalVisible(true);
   };
@@ -77,44 +80,21 @@ export default function AssignmentsScreen() {
         }
       }
 
-      const targetSubjectId = selectedSubjectId || (subjects.length > 0 ? subjects[0].id : 1);
+      const targetSubjectId = selectedSubjectId || (subjects.length > 0 ? subjects[0].id : 'general');
 
-      const created = await AssignmentService.create({
+      await AssignmentService.create({
         title: title.trim(),
         subject_id: targetSubjectId,
         due_date: isoDate,
       });
 
-      const assignToAdd: Assignment = {
-        id: created?.id || Date.now(),
-        title: title.trim(),
-        subject_id: targetSubjectId,
-        due_date: isoDate,
-        completed: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      setAssignments((prev) => [assignToAdd, ...prev.filter((a) => a.id !== assignToAdd.id)]);
       setTitle('');
       setDueDate('');
       setModalVisible(false);
+      await loadData();
       Alert.alert('Success', 'Assignment added successfully!');
-    } catch {
-      const fallbackAssign: Assignment = {
-        id: Date.now(),
-        title: title.trim(),
-        subject_id: selectedSubjectId || 1,
-        due_date: new Date(Date.now() + 5 * 86400000).toISOString(),
-        completed: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setAssignments((prev) => [fallbackAssign, ...prev]);
-      setTitle('');
-      setDueDate('');
-      setModalVisible(false);
-      Alert.alert('Success', 'Assignment added successfully!');
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to create assignment in Firestore.');
     } finally {
       setSubmitting(false);
     }
@@ -122,14 +102,14 @@ export default function AssignmentsScreen() {
 
   const handleToggleComplete = async (assignment: Assignment) => {
     try {
+      setAssignments((prev) =>
+        prev.map((a) => (a.id === assignment.id ? { ...a, completed: !a.completed } : a))
+      );
       await AssignmentService.update(assignment.id, { completed: !assignment.completed });
-      setAssignments((prev) =>
-        prev.map((a) => (a.id === assignment.id ? { ...a, completed: !a.completed } : a))
-      );
-    } catch {
-      setAssignments((prev) =>
-        prev.map((a) => (a.id === assignment.id ? { ...a, completed: !a.completed } : a))
-      );
+      await loadData();
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to update assignment in Firestore.');
+      await loadData();
     }
   };
 
@@ -146,7 +126,7 @@ export default function AssignmentsScreen() {
 
       <FlatList
         data={assignments}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => String(item.id)}
         onRefresh={loadData}
         refreshing={loading}
         renderItem={({ item }) => (
@@ -195,14 +175,14 @@ export default function AssignmentsScreen() {
               {subjects.length === 0 ? (
                 <TouchableOpacity
                   style={[styles.subChip, styles.subChipSelected]}
-                  onPress={() => setSelectedSubjectId(1)}
+                  onPress={() => setSelectedSubjectId('general')}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.chipText}>General / All Subjects</Text>
                 </TouchableOpacity>
               ) : (
                 subjects.map((sub) => {
-                  const isSelected = selectedSubjectId === sub.id;
+                  const isSelected = String(selectedSubjectId) === String(sub.id);
                   return (
                     <TouchableOpacity
                       key={`picker-ass-${sub.id}`}

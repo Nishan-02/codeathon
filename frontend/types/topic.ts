@@ -1,6 +1,6 @@
 export interface Topic {
-  id: number;
-  subject_id: number;
+  id: string | number;
+  subject_id: string | number;
   name: string;
   description?: string | null;
   difficulty: 'easy' | 'medium' | 'hard';

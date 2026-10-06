@@ -17,12 +17,13 @@ import { ExamService } from '../services/exams';
 import { SubjectService } from '../services/subjects';
 import { Exam } from '../types/exam';
 import { Subject } from '../types/subject';
-import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { formatDate } from '../utils/helpers';
+import { useAuth } from '../hooks/useAuth';
 
 export default function ExamsScreen() {
+  const { user } = useAuth();
   const router = useRouter();
   const [exams, setExams] = useState<Exam[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -31,10 +32,11 @@ export default function ExamsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState('');
   const [examDate, setExamDate] = useState('');
-  const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | number | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const loadData = async () => {
+    if (!user) return;
     try {
       setLoading(true);
       const [e, s] = await Promise.all([
@@ -57,13 +59,13 @@ export default function ExamsScreen() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]);
 
   const handleOpenModal = () => {
     if (subjects.length > 0) {
       setSelectedSubjectId(subjects[0].id);
     } else {
-      setSelectedSubjectId(1);
+      setSelectedSubjectId('general');
     }
     setModalVisible(true);
   };
@@ -91,51 +93,21 @@ export default function ExamsScreen() {
         }
       }
 
-      const created = await ExamService.create({
+      const targetSubjectId = selectedSubjectId || (subjects.length > 0 ? subjects[0].id : 'general');
+
+      await ExamService.create({
         title: title.trim(),
-        subject_id: selectedSubjectId || 1,
+        subject_id: targetSubjectId,
         exam_date: isoDate,
       });
 
-      if (created) {
-        setExams((prev) => [created, ...prev]);
-        setTitle('');
-        setExamDate('');
-        setModalVisible(false);
-        Alert.alert('Success', 'Exam scheduled successfully!');
-      } else {
-        const fallbackExam: Exam = {
-          id: Date.now(),
-          title: title.trim(),
-          subject_id: selectedSubjectId || 1,
-          subject_name: subjects.find((s) => s.id === selectedSubjectId)?.name || 'General',
-          exam_date: isoDate,
-          total_modules: 4,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        setExams((prev) => [fallbackExam, ...prev]);
-        setTitle('');
-        setExamDate('');
-        setModalVisible(false);
-        Alert.alert('Success', 'Exam scheduled successfully!');
-      }
-    } catch {
-      const fallbackExam: Exam = {
-        id: Date.now(),
-        title: title.trim(),
-        subject_id: selectedSubjectId || 1,
-        subject_name: subjects.find((s) => s.id === selectedSubjectId)?.name || 'General',
-        exam_date: new Date().toISOString(),
-        total_modules: 4,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setExams((prev) => [fallbackExam, ...prev]);
       setTitle('');
       setExamDate('');
       setModalVisible(false);
+      await loadData();
       Alert.alert('Success', 'Exam scheduled successfully!');
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to save exam to Firestore.');
     } finally {
       setSubmitting(false);
     }
@@ -178,7 +150,7 @@ export default function ExamsScreen() {
 
             <FlatList
               data={exams}
-              keyExtractor={(item) => item.id.toString()}
+              keyExtractor={(item) => String(item.id)}
               onRefresh={loadData}
               refreshing={loading}
               showsVerticalScrollIndicator={false}
@@ -228,21 +200,31 @@ export default function ExamsScreen() {
 
               <Text style={styles.label}>Select Subject</Text>
               <View style={styles.subjectPicker}>
-                {subjects.map((sub) => {
-                  const isSelected = selectedSubjectId === sub.id;
-                  return (
-                    <TouchableOpacity
-                      key={sub.id}
-                      style={[styles.subChip, isSelected && styles.subChipSelected]}
-                      onPress={() => setSelectedSubjectId(sub.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                        {sub.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                {subjects.length === 0 ? (
+                  <TouchableOpacity
+                    style={[styles.subChip, styles.subChipSelected]}
+                    onPress={() => setSelectedSubjectId('general')}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.chipTextSelected}>General / All Subjects</Text>
+                  </TouchableOpacity>
+                ) : (
+                  subjects.map((sub) => {
+                    const isSelected = String(selectedSubjectId) === String(sub.id);
+                    return (
+                      <TouchableOpacity
+                        key={`sub-${sub.id}`}
+                        style={[styles.subChip, isSelected && styles.subChipSelected]}
+                        onPress={() => setSelectedSubjectId(sub.id)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+                          {sub.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
               </View>
 
               <View style={styles.modalActions}>

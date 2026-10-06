@@ -1,9 +1,14 @@
-import { apiFetch } from './api';
+import {
+  getExams,
+  createExam,
+  updateExam,
+  deleteExam,
+} from '../lib/firebase/firestore';
 import { Exam, CreateExamInput, UpdateExamInput } from '../types/exam';
 
 export const ExamService = {
-  getAll: () => apiFetch<Exam[]>('/exams'),
-  create: (data: CreateExamInput) => apiFetch<Exam>('/exams', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: number, data: UpdateExamInput) => apiFetch<Exam>(`/exams/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id: number) => apiFetch<void>(`/exams/${id}`, { method: 'DELETE' }),
+  getAll: () => getExams(),
+  create: (data: CreateExamInput) => createExam(data),
+  update: (id: string | number, data: UpdateExamInput) => updateExam(id, data),
+  delete: (id: string | number) => deleteExam(id),
 };

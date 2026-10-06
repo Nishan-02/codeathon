@@ -29,47 +29,8 @@ export default function CalendarScreen() {
   const isDesktop = width >= 860;
 
   // ── State ─────────────────────────────────────────────────────────────────
-  const [exams, setExams] = useState<Exam[]>([
-    {
-      id: 1,
-      subject_id: 1,
-      title: 'DBMS Midterm Examination',
-      exam_date: '2026-10-15',
-      subject_name: 'Database Management',
-    },
-    {
-      id: 2,
-      subject_id: 2,
-      title: 'Algorithms End-Semester',
-      exam_date: '2026-10-26',
-      subject_name: 'Design & Analysis of Algorithms',
-    },
-  ]);
-
-  const [assignments, setAssignments] = useState<Assignment[]>([
-    {
-      id: 1,
-      subject_id: 1,
-      title: 'assignment 01',
-      due_date: '2026-10-22',
-      completed: false,
-    },
-    {
-      id: 2,
-      subject_id: 1,
-      title: 'SQL Joins Problem Set #4',
-      due_date: '2026-10-09',
-      completed: false,
-    },
-    {
-      id: 3,
-      subject_id: 3,
-      title: 'CPU Scheduling Simulator Project',
-      due_date: '2026-10-13',
-      completed: false,
-    },
-  ]);
-
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,7 +47,7 @@ export default function CalendarScreen() {
   // Selected item modal
   const [selectedItem, setSelectedItem] = useState<{
     type: 'exam' | 'assignment';
-    id: number;
+    id: string | number;
     title: string;
     date: string;
     status?: string;
@@ -100,6 +61,7 @@ export default function CalendarScreen() {
   };
 
   const loadData = async () => {
+    if (!user) return;
     try {
       setLoading(true);
       const [eList, aList] = await Promise.all([
@@ -107,10 +69,10 @@ export default function CalendarScreen() {
         AssignmentService.getAll().catch(() => []),
       ]);
 
-      if (eList && eList.length > 0) {
+      if (Array.isArray(eList)) {
         setExams(eList);
       }
-      if (aList && aList.length > 0) {
+      if (Array.isArray(aList)) {
         setAssignments(aList);
       }
     } finally {
@@ -121,7 +83,7 @@ export default function CalendarScreen() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]);
 
   // Format date helper
   const formatDateStr = (dStr: string) => {

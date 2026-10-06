@@ -34,3 +34,4 @@ firebase-service-account.json
 .idea/
 *.swp
 *.swo
+*.db

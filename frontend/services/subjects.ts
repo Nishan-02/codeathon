@@ -1,10 +1,16 @@
-import { apiFetch } from './api';
+import {
+  getSubjects,
+  getSubjectById,
+  createSubject,
+  updateSubject,
+  deleteSubject,
+} from '../lib/firebase/firestore';
 import { Subject, CreateSubjectInput, UpdateSubjectInput } from '../types/subject';
 
 export const SubjectService = {
-  getAll: () => apiFetch<Subject[]>('/subjects'),
-  getById: (id: number) => apiFetch<Subject>(`/subjects/${id}`),
-  create: (data: CreateSubjectInput) => apiFetch<Subject>('/subjects', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: number, data: UpdateSubjectInput) => apiFetch<Subject>(`/subjects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id: number) => apiFetch<void>(`/subjects/${id}`, { method: 'DELETE' }),
+  getAll: () => getSubjects(),
+  getById: (id: string | number) => getSubjectById(id),
+  create: (data: CreateSubjectInput) => createSubject(data),
+  update: (id: string | number, data: UpdateSubjectInput) => updateSubject(id, data),
+  delete: (id: string | number) => deleteSubject(id),
 };

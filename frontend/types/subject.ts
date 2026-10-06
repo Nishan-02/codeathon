@@ -1,6 +1,6 @@
 export interface Subject {
-  id: number;
-  user_id?: number;
+  id: string | number;
+  user_id?: string | number;
   name: string;
   description?: string | null;
   difficulty: 'easy' | 'medium' | 'hard';

@@ -251,8 +251,8 @@ function handleMockFallback<T>(endpoint: string, options: RequestInit = {}): T {
           updated_at: new Date().toISOString(),
         };
         db.subjects.push(newSubject);
-        if (!db.topics[newSubject.id]) {
-          db.topics[newSubject.id] = [];
+        if (!(db.topics as any)[newSubject.id]) {
+          (db.topics as any)[newSubject.id] = [];
         }
         saveLocalDb(db);
         return newSubject as unknown as T;

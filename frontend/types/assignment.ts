@@ -1,7 +1,7 @@
 export interface Assignment {
-  id: number;
-  user_id?: number;
-  subject_id: number;
+  id: string | number;
+  user_id?: string | number;
+  subject_id: string | number;
   title: string;
   due_date: string;
   description?: string | null;
@@ -12,7 +12,7 @@ export interface Assignment {
 }
 
 export interface CreateAssignmentInput {
-  subject_id: number;
+  subject_id: string | number;
   title: string;
   due_date: string;
   description?: string;
@@ -20,7 +20,7 @@ export interface CreateAssignmentInput {
 }
 
 export interface UpdateAssignmentInput {
-  subject_id?: number;
+  subject_id?: string | number;
   title?: string;
   due_date?: string;
   description?: string;

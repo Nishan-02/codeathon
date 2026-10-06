@@ -1,7 +1,7 @@
 export interface Exam {
-  id: number;
-  user_id?: number;
-  subject_id: number;
+  id: string | number;
+  user_id?: string | number;
+  subject_id: string | number;
   title: string;
   exam_date: string;
   description?: string | null;
@@ -12,14 +12,14 @@ export interface Exam {
 }
 
 export interface CreateExamInput {
-  subject_id: number;
+  subject_id: string | number;
   title: string;
   exam_date: string;
   description?: string;
 }
 
 export interface UpdateExamInput {
-  subject_id?: number;
+  subject_id?: string | number;
   title?: string;
   exam_date?: string;
   description?: string;

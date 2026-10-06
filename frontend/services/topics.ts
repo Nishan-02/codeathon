@@ -1,9 +1,15 @@
-import { apiFetch } from './api';
+import {
+  getTopics,
+  createTopic,
+  updateTopic,
+  deleteTopic,
+} from '../lib/firebase/firestore';
 import { Topic, CreateTopicInput, UpdateTopicInput } from '../types/topic';
 
 export const TopicService = {
-  getBySubject: (subjectId: number) => apiFetch<Topic[]>(`/subjects/${subjectId}/topics`),
-  create: (subjectId: number, data: CreateTopicInput) => apiFetch<Topic>(`/subjects/${subjectId}/topics`, { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: number, data: UpdateTopicInput) => apiFetch<Topic>(`/topics/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id: number) => apiFetch<void>(`/topics/${id}`, { method: 'DELETE' }),
+  getBySubject: (subjectId: string | number) => getTopics(subjectId),
+  getAll: () => getTopics(),
+  create: (subjectId: string | number, data: CreateTopicInput) => createTopic(subjectId, data),
+  update: (id: string | number, data: UpdateTopicInput) => updateTopic(id, data),
+  delete: (id: string | number) => deleteTopic(id),
 };

@@ -14,7 +14,7 @@ import { ProgressBar } from '../../components/common/ProgressBar';
 
 export default function SubjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const subjectId = parseInt(id || '1', 10);
+  const subjectId = id || '1';
 
   const [subject, setSubject] = useState<Subject | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -38,7 +38,7 @@ export default function SubjectDetailScreen() {
         TopicService.getBySubject(subjectId).catch(() => []),
         ProgressService.getSubjectProgress(subjectId).catch(() => null),
       ]);
-      if (subjData && subjData.id) {
+      if (subjData) {
         setSubject(subjData);
       } else {
         setSubject({
@@ -76,51 +76,22 @@ export default function SubjectDetailScreen() {
     try {
       setSubmitting(true);
       const hours = parseFloat(estimatedHours) || 1.0;
-      const created = await TopicService.create(subjectId, {
+      await TopicService.create(subjectId, {
         name: topicName.trim(),
         description: topicDesc.trim() || undefined,
         estimated_hours: hours,
         difficulty,
       });
 
-      const newTopic: Topic = {
-        id: created?.id || Date.now(),
-        subject_id: subjectId,
-        name: topicName.trim(),
-        description: topicDesc.trim() || undefined,
-        estimated_hours: hours,
-        difficulty,
-        completed: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      setTopics((prev) => [...prev.filter((t) => t.id !== newTopic.id), newTopic]);
       setTopicName('');
       setTopicDesc('');
       setEstimatedHours('1.0');
       setDifficulty('medium');
       setModalVisible(false);
+      await loadData();
       Alert.alert('Success', 'Topic added successfully!');
-    } catch {
-      const fallbackTopic: Topic = {
-        id: Date.now(),
-        subject_id: subjectId,
-        name: topicName.trim(),
-        description: topicDesc.trim() || undefined,
-        estimated_hours: parseFloat(estimatedHours) || 1.0,
-        difficulty,
-        completed: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setTopics((prev) => [...prev, fallbackTopic]);
-      setTopicName('');
-      setTopicDesc('');
-      setEstimatedHours('1.0');
-      setDifficulty('medium');
-      setModalVisible(false);
-      Alert.alert('Success', 'Topic added successfully!');
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to create topic in Firestore.');
     } finally {
       setSubmitting(false);
     }
@@ -128,14 +99,15 @@ export default function SubjectDetailScreen() {
 
   const handleToggleTopic = async (topic: Topic) => {
     try {
+      // Optimistic update
+      setTopics((prev) =>
+        prev.map((t) => (t.id === topic.id ? { ...t, completed: !t.completed } : t))
+      );
       await TopicService.update(topic.id, { completed: !topic.completed });
-      setTopics((prev) =>
-        prev.map((t) => (t.id === topic.id ? { ...t, completed: !t.completed } : t))
-      );
-    } catch {
-      setTopics((prev) =>
-        prev.map((t) => (t.id === topic.id ? { ...t, completed: !t.completed } : t))
-      );
+      await loadData();
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to update topic in Firestore.');
+      await loadData();
     }
   };
 
@@ -169,7 +141,7 @@ export default function SubjectDetailScreen() {
 
       <FlatList
         data={topics}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => String(item.id)}
         onRefresh={loadData}
         refreshing={loading}
         renderItem={({ item }) => (
