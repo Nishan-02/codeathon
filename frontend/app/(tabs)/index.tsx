@@ -294,6 +294,41 @@ export default function DashboardScreen() {
                 </View>
               </View>
 
+              {/* ── UPCOMING EXAM & DSA COVERAGE (Directly below ML Readiness) ── */}
+              <View style={s.twoCol}>
+                {nextExam && (
+                  <View style={[s.examCard, { flex: 1, marginRight: 8 }]}>
+                    <Text style={s.examAlert}>UPCOMING EXAM</Text>
+                    {daysLeft !== null && (
+                      <Text style={s.examDaysLeft}>
+                        {daysLeft <= 0 ? 'Today' : `${daysLeft}d left`}
+                      </Text>
+                    )}
+                    <Text style={s.examName} numberOfLines={1}>
+                      {nextExam.subject_name || 'Exam'}
+                    </Text>
+                    <Text style={s.examDate}>
+                      {new Date(nextExam.exam_date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </Text>
+                  </View>
+                )}
+
+                <View style={[s.coverCard, { flex: 1, marginLeft: nextExam ? 8 : 0 }]}>
+                  <Text style={s.coverLabel}>DSA COVERAGE</Text>
+                  <Text style={s.coverPct}>{dsaCoverage}%</Text>
+                  <Text style={s.coverName}>Data Structures</Text>
+                  <Text style={s.coverSub}>
+                    {progress?.completed_topics || 0}/{progress?.total_topics || 0} topics complete
+                  </Text>
+                  <View style={{ marginTop: 8 }}>
+                    <ProgressBar value={dsaCoverage} max={100} color="#00DFB2" />
+                  </View>
+                </View>
+              </View>
+
               {/* ── RAG KNOWLEDGE ENGINE & DOCUQUERY AI ── */}
               <TouchableOpacity
                 style={s.ragCard}
@@ -394,41 +429,6 @@ export default function DashboardScreen() {
                   );
                 })
               )}
-
-              {/* ── UPCOMING EXAM & DSA COVERAGE ── */}
-              <View style={s.twoCol}>
-                {nextExam && (
-                  <View style={[s.examCard, { flex: 1, marginRight: 8 }]}>
-                    <Text style={s.examAlert}>UPCOMING EXAM</Text>
-                    {daysLeft !== null && (
-                      <Text style={s.examDaysLeft}>
-                        {daysLeft <= 0 ? 'Today' : `${daysLeft}d left`}
-                      </Text>
-                    )}
-                    <Text style={s.examName} numberOfLines={1}>
-                      {nextExam.subject_name || 'Exam'}
-                    </Text>
-                    <Text style={s.examDate}>
-                      {new Date(nextExam.exam_date).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </Text>
-                  </View>
-                )}
-
-                <View style={[s.coverCard, { flex: 1, marginLeft: nextExam ? 8 : 0 }]}>
-                  <Text style={s.coverLabel}>DSA COVERAGE</Text>
-                  <Text style={s.coverPct}>{dsaCoverage}%</Text>
-                  <Text style={s.coverName}>Data Structures</Text>
-                  <Text style={s.coverSub}>
-                    {progress?.completed_topics || 0}/{progress?.total_topics || 0} topics complete
-                  </Text>
-                  <View style={{ marginTop: 8 }}>
-                    <ProgressBar value={dsaCoverage} max={100} color="#00DFB2" />
-                  </View>
-                </View>
-              </View>
 
               <View style={{ height: 24 }} />
             </View>
